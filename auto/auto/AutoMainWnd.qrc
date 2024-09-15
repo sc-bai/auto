@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file alias="logo">auto.ico</file>
+        <file alias="icon_check">res/icon_check.png</file>
+        <file alias="icon_uncheck">res/icon_uncheck.png</file>
+    </qresource>
+</RCC>
