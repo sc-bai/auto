@@ -34,6 +34,7 @@ private:
     void InitList();
     void InitContentList();	// ÄÚÈÝ
 
+    CLineComboxComplete* BuilderItem(ModifyType type);
     void ShowContentList();
     void ChangeIndexVecToTextVec(std::vector<ContentListItem>& vec);
     void ChangeTextVecToIndexVec();

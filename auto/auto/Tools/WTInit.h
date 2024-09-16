@@ -1,8 +1,16 @@
 #pragma once
-
+#include <map>
 #define MAX_TEMP 49
 #define MIN_TEMP (-60)
 
+/*
+	连个天气和成
+*/
+struct stWeatherInfo
+{
+	std::wstring strWeather;
+	std::wstring strWeatherEx;
+};
 class CItemInit {
 public:
 	static CItemInit* Instance() {
@@ -11,6 +19,7 @@ public:
 	}
 	void AppInit();
 public:
+	std::map<std::wstring , stWeatherInfo> g_scWeatherMap;
 	std::vector<std::wstring> g_scWeatherName;
 	std::vector<std::wstring> g_scWindName;
 	std::vector<std::wstring> g_scTempName;

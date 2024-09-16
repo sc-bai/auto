@@ -64,7 +64,7 @@ void AutoMainWnd::OnUiInit()
     this->setWindowIcon(QIcon(":/icon/logo"));
 
     QStringList headers;
-    headers << QStringLiteral("") << QStringLiteral("序号")<< QStringLiteral("地名") << QStringLiteral("天气") << QStringLiteral("温度") << QStringLiteral("风向")  << QStringLiteral("风向等级") << QStringLiteral("降水概率") ;
+    headers << QStringLiteral("") << QStringLiteral("序号")<< QStringLiteral("地名") << QStringLiteral("天气") /*<< QStringLiteral("天气2")*/ << QStringLiteral("最低温度") << QStringLiteral("最高温度") << QStringLiteral("风向1")  << QStringLiteral("风向2") << QStringLiteral("风向等级1") << QStringLiteral("风向等级2") << QStringLiteral("降水概率") ;
     ui.tableWidget->setColumnCount(headers.size());
     ui.tableWidget->setHorizontalHeaderLabels(headers);
     ui.tableWidget->setShowGrid(true);
@@ -77,10 +77,15 @@ void AutoMainWnd::OnUiInit()
     ui.tableWidget->setColumnWidth(0, 40);
     ui.tableWidget->setColumnWidth(1, 80);
     ui.tableWidget->setColumnWidth(2, 120);
-    ui.tableWidget->setColumnWidth(3, 200);// 天气
-    ui.tableWidget->setColumnWidth(4, 100); 
-    ui.tableWidget->setColumnWidth(5, 120);  
-    ui.tableWidget->setColumnWidth(6, 120);
+    ui.tableWidget->setColumnWidth(3, 150);// 天气
+    ui.tableWidget->setColumnWidth(4, 150);// 天气
+    ui.tableWidget->setColumnWidth(5, 80); 
+    ui.tableWidget->setColumnWidth(6, 80);  
+    ui.tableWidget->setColumnWidth(7, 100);
+    ui.tableWidget->setColumnWidth(8, 100);
+    ui.tableWidget->setColumnWidth(9, 80);
+    ui.tableWidget->setColumnWidth(10, 80);
+    ui.tableWidget->setColumnWidth(11, 120);
 
     QStringList slisttmp;
     for (auto& item : CItemInit::Instance()->g_scWeatherName)
@@ -382,9 +387,9 @@ void AutoMainWnd::slot_text_select(QString strText, int nIndex,  ModifyType type
         break;
     }
     ChangeTextVecToIndexVec();
-    ShowContentList();
+    //ShowContentList();
 }
-
+/*
 void AutoMainWnd::ShowContentList() 
 {
     ui.tableWidget->clearContents();
@@ -469,4 +474,223 @@ void AutoMainWnd::ShowContentList()
     }
     
     ui.tableWidget->setCurrentCell(m_curIndex, -1);
+}
+*/
+
+CLineComboxComplete* AutoMainWnd::BuilderItem(ModifyType type)
+{
+    CLineComboxComplete* pItem = new CLineComboxComplete();
+    connect(pItem, &CLineComboxComplete::signal_select, this, &AutoMainWnd::slot_text_select);
+
+    QStringList slistweather;
+    /*
+    for (auto& item : CItemInit::Instance()->g_scWeatherName){
+        slistweather << QString::fromStdWString(item);
+    }*/
+
+    // 把前20个过滤掉。因为weathermap中包含了。
+    for (int i=20;i< CItemInit::Instance()->g_scWeatherName.size();i++)
+    {
+        slistweather << QString::fromStdWString(CItemInit::Instance()->g_scWeatherName[i]);
+    }
+
+    for (auto & item : CItemInit::Instance()->g_scWeatherMap)
+    {
+        slistweather << QString::fromStdWString(item.first);
+    }
+    QStringList slisttemp;
+    for (auto& item : CItemInit::Instance()->g_scTempName) {
+        slisttemp << QString::fromStdWString(item);
+    }
+
+    QStringList slistwindname;
+    for (auto& item : CItemInit::Instance()->g_scWindName) {
+        slistwindname << QString::fromStdWString(item);
+    }
+
+    QStringList slistwindlv;
+    for (auto& item : CItemInit::Instance()->g_scWindLv) {
+        slistwindlv << QString::fromStdWString(item);
+    }
+
+    QStringList slistPre;
+    for (auto& item : CItemInit::Instance()->g_scPrecipitationName) {
+        slistPre << QString::fromStdWString(item);
+    }
+
+    switch (type)
+    {
+    case ModifyType::type_weather:
+    {
+        pItem->SetModifyType(ModifyType::type_weather);
+        //pItem->SetPlaceholderText(QStringLiteral("天气1"));
+        pItem->SetComboxItems(slistweather);
+    }
+        break;
+    case ModifyType::type_weatherex:
+    {
+        pItem->SetModifyType(ModifyType::type_weatherex);
+        //pItem->SetPlaceholderText(QStringLiteral("天气2"));
+        pItem->SetComboxItems(slistweather);
+    }
+        break;
+    case ModifyType::type_temp:
+    {
+        pItem->SetModifyType(ModifyType::type_temp);
+       // pItem->SetPlaceholderText(QStringLiteral("温度1"));
+        pItem->SetComboxItems(slisttemp);
+    }
+        break;
+    case ModifyType::type_tempex:
+    {
+       pItem->SetModifyType(ModifyType::type_tempex);
+      // pItem->SetPlaceholderText(QStringLiteral("温度2"));
+       pItem->SetComboxItems(slisttemp);
+    }
+        break;
+    case ModifyType::type_wind:
+    {
+        pItem->SetModifyType(ModifyType::type_wind);
+       // pItem->SetPlaceholderText(QStringLiteral("风向1"));
+        pItem->SetComboxItems(slistwindname);
+    }
+        break;
+    case ModifyType::type_windex:
+    {
+        pItem->SetModifyType(ModifyType::type_windex);
+       // pItem->SetPlaceholderText(QStringLiteral("风向2"));
+        pItem->SetComboxItems(slistwindname);
+    }
+        break;
+    case ModifyType::type_windlv:
+    {
+        pItem->SetModifyType(ModifyType::type_windlv);
+        //pItem->SetPlaceholderText(QStringLiteral("风速1"));
+        pItem->SetComboxItems(slistwindlv);
+    }
+        break;
+    case ModifyType::type_windlvex:
+    {
+       pItem->SetModifyType(ModifyType::type_windlvex);
+       //pItem->SetPlaceholderText(QStringLiteral("风速2"));
+       pItem->SetComboxItems(slistwindlv);
+    }
+        break;
+    case ModifyType::type_precipitation:
+    {
+        pItem->SetModifyType(ModifyType::type_precipitation);
+        //pItem->SetPlaceholderText(QStringLiteral("降水概率"));
+        pItem->SetComboxItems(slistPre);
+    }
+        break;
+    default:
+        break;
+    }
+    return pItem;
+}
+
+void AutoMainWnd::ShowContentList()
+{
+    CLineComboxComplete* pItem = nullptr;
+    ui.tableWidget->clearContents();
+    ui.tableWidget->setRowCount(m_vCtxTextList.size());
+
+
+    auto compfunc = [](std::wstring str1, std::wstring str2, std::wstring strFlag)->std::wstring {
+        std::wstring strText;
+        if (str1.empty() && str2.empty()) {
+            strText = L"空";
+        }
+        else if (str1.empty() || str2.empty()) {
+            strText = str1.empty() ? str2 : str1;
+        }
+        else if (str1 == str2) {
+            strText = str1;
+        }
+        else {
+            strText = str1 + strFlag + str2;
+        }
+        return strText;
+    };
+
+
+    QStringList slisttmp;
+    std::wstring strTmp, strTmpEx, strText;
+    int nw1 = 0, nw2 = 0;
+    QCheckBox* pcb = nullptr;
+    wchar_t buff[8] = { 0 };
+    for (int i = 0; i < m_vCtxTextList.size(); i++)
+    {
+        pcb = new QCheckBox(this);
+        pcb->setMinimumSize(40, 40);
+        pcb->setStyleSheet("QCheckBox{border: none; }QCheckBox::indicator{width: 40px;height: 40px;}QCheckBox::indicator:unchecked{image: url(:/icon/icon_uncheck);}QCheckBox::indicator:checked{image: url(:/icon/icon_check);}");
+
+        ui.tableWidget->setCellWidget(i, 0, pcb);
+
+        ZeroMemory(buff, sizeof(buff));
+        wsprintf(buff, L"%03d", i);
+        ui.tableWidget->setItem(i, 1, new QTableWidgetItem(QString::fromStdWString(buff)));
+        ui.tableWidget->setItem(i, 2, new QTableWidgetItem(QString::fromStdWString(m_vCtxTextList[i].strLocation)));
+
+        strTmp = m_vCtxTextList[i].strWeather;
+        strTmpEx = m_vCtxTextList[i].strWeatherEx;
+        nw1 = _wtoi(m_vCtxIndexList[i].strWeather.c_str());
+        nw2 = _wtoi(m_vCtxIndexList[i].strWeatherEx.c_str());
+        if ((nw1 > 19 && nw2 < 19) || (nw1 < 19 && nw2 > 19)) {
+            //strText = compfunc(strTmp, strTmpEx, L"X");
+            strText = strTmp;
+        }
+        else if ((nw1 == 19 || nw2 == 19) && (nw1 != nw2)) {
+            strText = compfunc(strTmp, strTmpEx, L"X");
+        }
+        else if (nw1 == 19 && nw2 == 19) {
+            strText = L"空";
+        }
+        else if (nw1 > 19 && nw2 > 19) {
+            strText = strTmp;
+        }
+        else {
+            strText = compfunc(strTmp, strTmpEx, L"转");
+        }
+        //ui.tableWidget->setItem(i, 3, new QTableWidgetItem(QString::fromStdWString(strText)));
+
+        pItem = BuilderItem(ModifyType::type_weather);
+        pItem->SetTextContent(strText);
+        ui.tableWidget->setCellWidget(i, 3, pItem);
+        /*
+        pItem = BuilderItem(ModifyType::type_weatherex);
+        pItem->SetTextContent(m_vCtxTextList[i].strWeatherEx);
+        ui.tableWidget->setCellWidget(i, 4, pItem);
+        */
+
+        pItem = BuilderItem(ModifyType::type_temp);
+        pItem->SetTextContent(m_vCtxTextList[i].strTemp);
+        ui.tableWidget->setCellWidget(i, 4, pItem);
+
+        pItem = BuilderItem(ModifyType::type_tempex);
+        pItem->SetTextContent(m_vCtxTextList[i].strTempEx);
+        ui.tableWidget->setCellWidget(i, 5, pItem);
+
+        pItem = BuilderItem(ModifyType::type_wind);
+        pItem->SetTextContent(m_vCtxTextList[i].strWind);
+        ui.tableWidget->setCellWidget(i, 6, pItem);
+
+        pItem = BuilderItem(ModifyType::type_windex);
+        pItem->SetTextContent(m_vCtxTextList[i].strWindEx);
+        ui.tableWidget->setCellWidget(i, 7, pItem);
+
+        pItem = BuilderItem(ModifyType::type_windlv);
+        pItem->SetTextContent(m_vCtxTextList[i].strWindLv);
+        ui.tableWidget->setCellWidget(i, 8, pItem);
+
+        pItem = BuilderItem(ModifyType::type_windlvex);
+        pItem->SetTextContent(m_vCtxTextList[i].strWindLvEx);
+        ui.tableWidget->setCellWidget(i, 9, pItem);
+
+        pItem = BuilderItem(ModifyType::type_precipitation);
+        pItem->SetTextContent(m_vCtxTextList[i].strPrecipitation);
+        ui.tableWidget->setCellWidget(i, 10, pItem);
+
+        ui.tableWidget->setRowHeight(i, 40);
+    }
 }

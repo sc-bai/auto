@@ -3,6 +3,8 @@
 
 void CItemInit::AppInit()
 {
+	std::vector<std::wstring> sListWeather;
+
 	g_scWeatherName.push_back(L"晴天");
 	g_scWeatherName.push_back(L"多云");
 	g_scWeatherName.push_back(L"阴天");
@@ -23,6 +25,8 @@ void CItemInit::AppInit()
 	g_scWeatherName.push_back(L"霾");
 	g_scWeatherName.push_back(L"雾霾");
 	g_scWeatherName.push_back(L"空");
+	sListWeather = g_scWeatherName;
+	
 	g_scWeatherName.push_back(L"晴到少云");
 	g_scWeatherName.push_back(L"晴间多云");
 	g_scWeatherName.push_back(L"晴到多云");
@@ -112,6 +116,52 @@ void CItemInit::AppInit()
 		}
 	}
 
+	// 因为天气只有一栏 所以要搞成这样。方便进行拆分。这样不修改底层的索引逻辑就可以遍历到索引。实现wav rec文件的合成和修改
+	// 便利的时候需要先遍历 g_scWeatherMap
+    auto compfunc = [](std::wstring str1, std::wstring str2, std::wstring strFlag)->std::wstring {
+        std::wstring strText;
+        if (str1.empty() && str2.empty()) {
+            strText = L"空";
+        }
+        else if (str1.empty() || str2.empty()) {
+            strText = str1.empty() ? str2 : str1;
+        }
+        else if (str1 == str2) {
+            strText = str1;
+        }
+        else {
+            strText = str1 + strFlag + str2;
+        }
+        return strText;
+    };
+
+	std::wstring strKey;
+	int nw1 = 0, nw2 = 0;
+	for (int i=0;i<sListWeather.size();i++)
+	{
+		for (int j=0;j<sListWeather.size();j++)
+		{
+            nw1 = i;
+            nw2 = j;
+            if ((nw1 > 19 && nw2 < 19) || (nw1 < 19 && nw2 > 19)) {
+                //strText = compfunc(strTmp, strTmpEx, L"X");
+				strKey = sListWeather[i];
+            }
+            else if ((nw1 == 19 || nw2 == 19) && (nw1 != nw2)) {
+				strKey = compfunc(sListWeather[i], sListWeather[j], L"X");
+            }
+            else if (nw1 == 19 && nw2 == 19) {
+				strKey = L"空";
+            }
+            else if (nw1 > 19 && nw2 > 19) {
+				strKey = sListWeather[i];
+            }
+            else {
+				strKey = compfunc(sListWeather[i], sListWeather[j], L"转");
+            }
+			g_scWeatherMap[strKey] = stWeatherInfo{ sListWeather[i] , sListWeather[j] };
+		}
+	}
 
 	g_scWindName.push_back(L"北风");
 	g_scWindName.push_back(L"东北风");
