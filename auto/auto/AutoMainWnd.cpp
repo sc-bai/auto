@@ -78,77 +78,12 @@ void AutoMainWnd::OnUiInit()
     ui.tableWidget->setColumnWidth(1, 80);
     ui.tableWidget->setColumnWidth(2, 120);
     ui.tableWidget->setColumnWidth(3, 150);// 天气
-    ui.tableWidget->setColumnWidth(4, 150);// 天气
+    ui.tableWidget->setColumnWidth(4, 80);
     ui.tableWidget->setColumnWidth(5, 80); 
-    ui.tableWidget->setColumnWidth(6, 80);  
-    ui.tableWidget->setColumnWidth(7, 100);
-    ui.tableWidget->setColumnWidth(8, 100);
+    ui.tableWidget->setColumnWidth(6, 80);
+    ui.tableWidget->setColumnWidth(7, 80);
+    ui.tableWidget->setColumnWidth(8, 80);
     ui.tableWidget->setColumnWidth(9, 80);
-    ui.tableWidget->setColumnWidth(10, 80);
-    ui.tableWidget->setColumnWidth(11, 120);
-
-    QStringList slisttmp;
-    for (auto& item : CItemInit::Instance()->g_scWeatherName)
-    {
-        slisttmp << QString::fromStdWString(item);
-    }
-    ui.lcc_weather->SetModifyType(ModifyType::type_weather);
-    ui.lcc_weather->SetPlaceholderText(QStringLiteral("天气1"));
-    ui.lcc_weather->SetComboxItems(slisttmp);
-    ui.lcc_weatherex->SetModifyType(ModifyType::type_weatherex);
-    ui.lcc_weatherex->SetPlaceholderText(QStringLiteral("天气2"));
-    ui.lcc_weatherex->SetComboxItems(slisttmp);
-   
-    slisttmp.clear();
-    for (auto& item : CItemInit::Instance()->g_scTempName)  {
-        slisttmp << QString::fromStdWString(item);
-    }
-    ui.lcc_temp->SetModifyType(ModifyType::type_temp);
-    ui.lcc_temp->SetPlaceholderText(QStringLiteral("温度1"));
-    ui.lcc_temp->SetComboxItems(slisttmp);
-    ui.lcc_tempex->SetModifyType(ModifyType::type_tempex);
-    ui.lcc_tempex->SetPlaceholderText(QStringLiteral("温度2"));
-    ui.lcc_tempex->SetComboxItems(slisttmp);
-
-    slisttmp.clear();
-    for (auto& item : CItemInit::Instance()->g_scWindName) {
-        slisttmp << QString::fromStdWString(item);
-    }
-    ui.lcc_wind->SetModifyType(ModifyType::type_wind);
-    ui.lcc_wind->SetPlaceholderText(QStringLiteral("风向1"));
-    ui.lcc_wind->SetComboxItems(slisttmp);
-    ui.lcc_windex->SetModifyType(ModifyType::type_windex);
-    ui.lcc_windex->SetPlaceholderText(QStringLiteral("风向2"));
-    ui.lcc_windex->SetComboxItems(slisttmp);
-
-    slisttmp.clear();
-    for (auto& item : CItemInit::Instance()->g_scWindLv) {
-        slisttmp << QString::fromStdWString(item);
-    }
-    ui.lcc_windlevel->SetModifyType(ModifyType::type_windlv);
-    ui.lcc_windlevel->SetPlaceholderText(QStringLiteral("风速1"));
-    ui.lcc_windlevel->SetComboxItems(slisttmp);
-    ui.lcc_windlevelex->SetModifyType(ModifyType::type_windlvex);
-    ui.lcc_windlevelex->SetPlaceholderText(QStringLiteral("风速2"));
-    ui.lcc_windlevelex->SetComboxItems(slisttmp);
-
-    slisttmp.clear();
-    for (auto& item : CItemInit::Instance()->g_scPrecipitationName) {
-        slisttmp << QString::fromStdWString(item);
-    }
-    ui.lcc_precipitation->SetModifyType(ModifyType::type_precipitation);
-    ui.lcc_precipitation->SetPlaceholderText(QStringLiteral("降水概率"));
-    ui.lcc_precipitation->SetComboxItems(slisttmp);
-
-    connect(ui.lcc_weather, &CLineComboxComplete::signal_select, this, &AutoMainWnd::slot_text_select);
-    connect(ui.lcc_weatherex, &CLineComboxComplete::signal_select, this, &AutoMainWnd::slot_text_select);
-    connect(ui.lcc_temp, &CLineComboxComplete::signal_select, this, &AutoMainWnd::slot_text_select);
-    connect(ui.lcc_tempex, &CLineComboxComplete::signal_select, this, &AutoMainWnd::slot_text_select);
-    connect(ui.lcc_wind, &CLineComboxComplete::signal_select, this, &AutoMainWnd::slot_text_select);
-    connect(ui.lcc_windex, &CLineComboxComplete::signal_select, this, &AutoMainWnd::slot_text_select);
-    connect(ui.lcc_windlevel, &CLineComboxComplete::signal_select, this, &AutoMainWnd::slot_text_select);
-    connect(ui.lcc_windlevelex, &CLineComboxComplete::signal_select, this, &AutoMainWnd::slot_text_select);
-    connect(ui.lcc_precipitation, &CLineComboxComplete::signal_select, this, &AutoMainWnd::slot_text_select);
 }
 
 /*
@@ -316,7 +251,9 @@ void AutoMainWnd::ChangeTextVecToIndexVec()
     }
 }
 
-
+/*
+    显示变动槽函数
+*/
 void AutoMainWnd::slot_text_select(QString strText, int nIndex,  ModifyType type)
 {
     if (m_vCtxTextList.size() == 0) return;
@@ -389,93 +326,6 @@ void AutoMainWnd::slot_text_select(QString strText, int nIndex,  ModifyType type
     ChangeTextVecToIndexVec();
     //ShowContentList();
 }
-/*
-void AutoMainWnd::ShowContentList() 
-{
-    ui.tableWidget->clearContents();
-    ui.tableWidget->setRowCount(m_vCtxTextList.size());
-
-
-    auto compfunc = [](std::wstring str1, std::wstring str2, std::wstring strFlag)->std::wstring {
-        std::wstring strText;
-        if (str1.empty() && str2.empty()) {
-            strText = L"空";
-        }
-        else if (str1.empty() || str2.empty()) {
-            strText = str1.empty() ? str2 : str1;
-        }
-        else if (str1 == str2) {
-            strText = str1;
-        }
-        else {
-            strText = str1 + strFlag + str2;
-        }
-        return strText;
-    };
-
-
-
-    std::wstring strTmp, strTmpEx, strText;
-    int nw1 = 0, nw2 = 0;
-    QCheckBox* pcb = nullptr;
-    wchar_t buff[8] = { 0 };
-    for (int i = 0;i <m_vCtxTextList.size();i++)
-    {
-        pcb = new QCheckBox(this);
-        pcb->setMinimumSize(40, 40);
-        pcb->setStyleSheet("QCheckBox{border: none; }QCheckBox::indicator{width: 40px;height: 40px;}QCheckBox::indicator:unchecked{image: url(:/icon/icon_uncheck);}QCheckBox::indicator:checked{image: url(:/icon/icon_check);}");
-
-        ui.tableWidget->setCellWidget(i, 0, pcb);
-
-        ZeroMemory(buff, sizeof(buff));
-        wsprintf(buff, L"%03d", i);
-        ui.tableWidget->setItem(i, 1, new QTableWidgetItem(QString::fromStdWString(buff)));
-        ui.tableWidget->setItem(i, 2, new QTableWidgetItem(QString::fromStdWString(m_vCtxTextList[i].strLocation)));
-        
-        strTmp = m_vCtxTextList[i].strWeather;
-        strTmpEx = m_vCtxTextList[i].strWeatherEx;
-        nw1 = _wtoi(m_vCtxIndexList[i].strWeather.c_str());
-        nw2 = _wtoi(m_vCtxIndexList[i].strWeatherEx.c_str());
-        if ((nw1 > 19 && nw2 < 19) || (nw1 < 19 && nw2 > 19)) {
-            //strText = compfunc(strTmp, strTmpEx, L"X");
-            strText = strTmp;
-        }
-        else if ((nw1 == 19 || nw2 == 19) && (nw1 != nw2)) {
-            strText = compfunc(strTmp, strTmpEx, L"X");
-        }
-        else if (nw1 == 19 && nw2 == 19) {
-            strText = L"空";
-        }
-        else if (nw1 > 19 && nw2 > 19) {
-            strText = strTmp;
-        }
-        else {
-            strText = compfunc(strTmp, strTmpEx, L"转");
-        }
-        ui.tableWidget->setItem(i, 3, new QTableWidgetItem(QString::fromStdWString(strText)));
-
-        strTmp = m_vCtxTextList[i].strTemp;
-        strTmpEx = m_vCtxTextList[i].strTempEx;
-        strText = compfunc(strTmp, strTmpEx, L"到");
-        ui.tableWidget->setItem(i, 4, new QTableWidgetItem(QString::fromStdWString(strText)));
-
-        strTmp = m_vCtxTextList[i].strWind;
-        strTmpEx = m_vCtxTextList[i].strWindEx;
-        strText = compfunc(strTmp, strTmpEx, L"转");
-        ui.tableWidget->setItem(i, 5, new QTableWidgetItem(QString::fromStdWString(strText)));
-
-        strTmp = m_vCtxTextList[i].strWindLv;
-        strTmpEx = m_vCtxTextList[i].strWindLvEx;
-        strText = compfunc(strTmp, strTmpEx, L"转");
-        ui.tableWidget->setItem(i, 6, new QTableWidgetItem(QString::fromStdWString(strText)));
-        ui.tableWidget->setItem(i, 7, new QTableWidgetItem(QString::fromStdWString(m_vCtxTextList[i].strPrecipitation)));
-
-        ui.tableWidget->setRowHeight(i, 40);
-    }
-    
-    ui.tableWidget->setCurrentCell(m_curIndex, -1);
-}
-*/
 
 CLineComboxComplete* AutoMainWnd::BuilderItem(ModifyType type)
 {
@@ -523,69 +373,63 @@ CLineComboxComplete* AutoMainWnd::BuilderItem(ModifyType type)
     case ModifyType::type_weather:
     {
         pItem->SetModifyType(ModifyType::type_weather);
-        //pItem->SetPlaceholderText(QStringLiteral("天气1"));
-        pItem->SetComboxItems(slistweather);
+        //pItem->SetPlaceholderText(QStringLiteral("天气"));
+        pItem->SetWordList(slistweather);
     }
         break;
     case ModifyType::type_weatherex:
     {
         pItem->SetModifyType(ModifyType::type_weatherex);
-        //pItem->SetPlaceholderText(QStringLiteral("天气2"));
-        pItem->SetComboxItems(slistweather);
+        pItem->SetWordList(slistweather);
     }
         break;
     case ModifyType::type_temp:
     {
         pItem->SetModifyType(ModifyType::type_temp);
-       // pItem->SetPlaceholderText(QStringLiteral("温度1"));
-        pItem->SetComboxItems(slisttemp);
+        pItem->SetWordList(slisttemp);
     }
         break;
     case ModifyType::type_tempex:
     {
        pItem->SetModifyType(ModifyType::type_tempex);
-      // pItem->SetPlaceholderText(QStringLiteral("温度2"));
-       pItem->SetComboxItems(slisttemp);
+       pItem->SetWordList(slisttemp);
     }
         break;
     case ModifyType::type_wind:
     {
         pItem->SetModifyType(ModifyType::type_wind);
-       // pItem->SetPlaceholderText(QStringLiteral("风向1"));
-        pItem->SetComboxItems(slistwindname);
+        pItem->SetWordList(slistwindname);
     }
         break;
     case ModifyType::type_windex:
     {
         pItem->SetModifyType(ModifyType::type_windex);
-       // pItem->SetPlaceholderText(QStringLiteral("风向2"));
-        pItem->SetComboxItems(slistwindname);
+        pItem->SetWordList(slistwindname);
     }
         break;
     case ModifyType::type_windlv:
     {
         pItem->SetModifyType(ModifyType::type_windlv);
-        //pItem->SetPlaceholderText(QStringLiteral("风速1"));
-        pItem->SetComboxItems(slistwindlv);
+        pItem->SetWordList(slistwindlv);
     }
         break;
     case ModifyType::type_windlvex:
     {
        pItem->SetModifyType(ModifyType::type_windlvex);
-       //pItem->SetPlaceholderText(QStringLiteral("风速2"));
-       pItem->SetComboxItems(slistwindlv);
+       pItem->SetWordList(slistwindlv);
     }
         break;
     case ModifyType::type_precipitation:
     {
         pItem->SetModifyType(ModifyType::type_precipitation);
-        //pItem->SetPlaceholderText(QStringLiteral("降水概率"));
-        pItem->SetComboxItems(slistPre);
+        pItem->SetWordList(slistPre);
     }
         break;
     default:
         break;
     }
+
+   
     return pItem;
 }
 
@@ -670,7 +514,7 @@ void AutoMainWnd::ShowContentList()
         pItem = BuilderItem(ModifyType::type_tempex);
         pItem->SetTextContent(m_vCtxTextList[i].strTempEx);
         ui.tableWidget->setCellWidget(i, 5, pItem);
-
+        
         pItem = BuilderItem(ModifyType::type_wind);
         pItem->SetTextContent(m_vCtxTextList[i].strWind);
         ui.tableWidget->setCellWidget(i, 6, pItem);
@@ -678,7 +522,7 @@ void AutoMainWnd::ShowContentList()
         pItem = BuilderItem(ModifyType::type_windex);
         pItem->SetTextContent(m_vCtxTextList[i].strWindEx);
         ui.tableWidget->setCellWidget(i, 7, pItem);
-
+        
         pItem = BuilderItem(ModifyType::type_windlv);
         pItem->SetTextContent(m_vCtxTextList[i].strWindLv);
         ui.tableWidget->setCellWidget(i, 8, pItem);
@@ -686,7 +530,7 @@ void AutoMainWnd::ShowContentList()
         pItem = BuilderItem(ModifyType::type_windlvex);
         pItem->SetTextContent(m_vCtxTextList[i].strWindLvEx);
         ui.tableWidget->setCellWidget(i, 9, pItem);
-
+        
         pItem = BuilderItem(ModifyType::type_precipitation);
         pItem->SetTextContent(m_vCtxTextList[i].strPrecipitation);
         ui.tableWidget->setCellWidget(i, 10, pItem);

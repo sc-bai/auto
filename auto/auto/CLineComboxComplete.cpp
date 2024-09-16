@@ -1,183 +1,40 @@
-/*
-    模糊查询
-*/
-
-#include <qlistview.h>
 #include "CLineComboxComplete.h"
+#include <QKeyEvent>
+#include <QListView>
+#include <QStringListModel>
+#include <QDebug>
+#include "stdafx.h"
 
-CLineComboxComplete::CLineComboxComplete(QWidget *parent)
-    : QWidget(parent)
-{
-    ui.setupUi(this);
-    //ui.comboBox->setStyleSheet("QComboBox::drop-down {  subcontrol - origin: padding;   subcontrol - position: top right;width: 15px;border:none;}");
-    ui.comboBox->setStyleSheet("QComboBox {  border:none;}");
-    ui.comboBox->setVisible(false);
+CLineComboxComplete::CLineComboxComplete(QStringList words, QWidget* parent)
+    : QLineEdit(parent), words(words) {
+    listView = new QListView(this);
+    listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    model = new QStringListModel(this);
+    listView->setWindowFlags(Qt::ToolTip);
+    connect(this, SIGNAL(textChanged(const QString&)), this, SLOT(setCompleter(const QString&)));
+    connect(listView, SIGNAL(clicked(const QModelIndex&)), this, SLOT(completeText(const QModelIndex&)));
+    listView->hide();
 }
 
-CLineComboxComplete::~CLineComboxComplete()
-{}
-
-void CLineComboxComplete::SetTextContent(QString strText)
-{
-    ui.lineEdit->setText(strText);
+CLineComboxComplete::CLineComboxComplete(QWidget* parent /*= 0*/)
+    : QLineEdit(parent) {
+        listView = new QListView(this);
+        listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        model = new QStringListModel(this);
+        listView->setWindowFlags(Qt::ToolTip);
+        connect(this, SIGNAL(textChanged(const QString&)), this, SLOT(setCompleter(const QString&)));
+        connect(listView, SIGNAL(clicked(const QModelIndex&)), this, SLOT(completeText(const QModelIndex&)));
+        listView->hide();
 }
 
 void CLineComboxComplete::SetTextContent(std::wstring strText)
 {
-    QString strQText = QString::fromStdWString(strText);
-    SetTextContent(strQText);
-}
-QCompleter* CLineComboxComplete::BuilderCompleter(QStringList& slist) {
-
-    QStringListModel* stringListModel = new QStringListModel(this);
-    if (m_pCompleter) {
-        delete m_pCompleter ;
-        m_pCompleter = nullptr;
-    }
-    m_pCompleter = new QCompleter(slist);
-    QListView* listView = new QListView;
-    listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    m_pCompleter->setPopup(listView);
-    m_pCompleter->setFilterMode(Qt::MatchStartsWith);
-    //m_pCompleter->setCaseSensitivity(Qt::CaseInsensitive);//大小写匹配
-    QAbstractItemView* view = m_pCompleter->popup();
-    view->setItemDelegate(new ComboBoxDelegate()); //设置行高
-    view->setStyleSheet(QString("QListView { font-size: 13px;}"));
-    //设置Eidt的模糊查询对象
-
-    return m_pCompleter;
+    this->setText(QString::fromStdWString(strText));
 }
 
-void CLineComboxComplete::SetComboxItems(QStringList& slist) {
-    m_slist = slist;
-    BuilderCompleter(slist);
-    ui.lineEdit->setCompleter(m_pCompleter);
-
-
-
-    connect(ui.lineEdit, &QLineEdit::textChanged, [&](QString strText) {
-        //proxyModel->SetFilterString(strText);
-        return;
-        if (strText.isEmpty()) {
-            BuilderCompleter(m_slist);
-            ui.lineEdit->setCompleter(m_pCompleter);
-            return;
-        }
-        // 英文首字母匹配
-        QStringList sListShow;
-        std::string strAsci = strText.toStdString();
-        std::wstring strWText;
-        char szEnglishText[MAX_PATH] = { 0 };
-        unsigned short szChineseText[MAX_PATH] = { 0 };
-        memcpy(szEnglishText, strAsci.c_str(), strAsci.length());
-        int j = 0;
-        for (int i = 0; i < strlen(szEnglishText); i++) {
-            if (szEnglishText[i] != 0) {
-                tool::ChinaStringHandle::EnglishToChinese(szEnglishText, szChineseText, i);
-                j++;
-            }
-            else
-                break;
-        }
-
-        char szlistItem[MAX_PATH] = { 0 };
-        for (int i = 0; i < m_slist.size(); i++) {
-            strWText = m_slist[i].toStdWString();
-            strAsci = tool::CodeHelper::WStr2Str(strWText);
-            ZeroMemory(szlistItem, sizeof(szlistItem));
-            memcpy(szlistItem, strAsci.c_str(), strAsci.length());
-            if (tool::ChinaStringHandle::Filter(szlistItem, szChineseText, j) == 0) {
-                sListShow.push_back(m_slist[i]);
-            }
-        }
-
-
-        BuilderCompleter(sListShow);
-        ui.lineEdit->setCompleter(m_pCompleter);
-        
-    });
-}
-
-
-/*
-void CLineComboxComplete::SetComboxItems(QStringList& slist)
+void CLineComboxComplete::SetWordList(QStringList& slist)
 {
-    m_slist = slist;
-    ui.comboBox->addItems(slist);
-    ui.comboBox->setView(new QListView());
-    ui.comboBox->setLineEdit(ui.lineEdit);
-    ui.comboBox->setMaxVisibleItems(10);//下拉列表显示item数
-
-    QCompleter* pComplete = new QCompleter(slist, this);
-    pComplete->setFilterMode(Qt::MatchContains);
-
-    ui.lineEdit->setCompleter(pComplete);
-    pComplete->setCaseSensitivity(Qt::CaseInsensitive);
-    ui.comboBox->setCompleter(pComplete);
-    ui.comboBox->setCurrentIndex(-1);
-    m_bIgnore= true;
-    ui.lineEdit->clear();
-
-    // 保证绑定一次
-    if(m_bConnected) return ;
-    connect(ui.lineEdit, &QLineEdit::textChanged, [&](QString strText) {
-        if (m_bIgnore) {
-            m_bIgnore = false;
-            return;
-        }
-        
-        // 如果时候文字匹配
-        if (strText.isEmpty()) {
-            emit signal_select(strText, -1, m_type);
-            UpdateCombox(m_slist);
-            return;
-        }
-       
-       if(strText.isEmpty()) return;
-        for (int i = 0; i < m_slist.size(); i++) {
-            if (m_slist[i] == strText) {
-                emit signal_select(strText, i, m_type);
-                UpdateCombox(m_slist);
-                return;
-            }
-        }
-         
-        // 英文首字母匹配
-        QStringList sListShow;
-        std::string strAsci = strText.toStdString();
-        std::wstring strWText ;
-        char szEnglishText[MAX_PATH] = { 0 };
-        unsigned short szChineseText[MAX_PATH] = { 0 };
-        memcpy(szEnglishText, strAsci.c_str(), strAsci.length());
-        int j = 0;
-        for (int i = 0; i < strlen(szEnglishText); i++) {
-            if (szEnglishText[i] != 0) {
-                tool::ChinaStringHandle::EnglishToChinese(szEnglishText, szChineseText, i);
-                j++;
-            }
-            else
-                break;
-        }
-       
-        char szlistItem[MAX_PATH] = { 0 };
-        for (int i = 0; i < m_slist.size(); i++) {
-            strWText = m_slist[i].toStdWString();
-            strAsci = tool::CodeHelper::WStr2Str(strWText);
-            ZeroMemory(szlistItem, sizeof(szlistItem));
-            memcpy(szlistItem, strAsci.c_str(), strAsci.length());
-            if (tool::ChinaStringHandle::Filter(szlistItem, szChineseText, j) == 0) {
-                sListShow.push_back(m_slist[i]);
-            }
-        }
-        UpdateCombox(sListShow);
-    });
-    m_bConnected = true;
-}
-*/
-void CLineComboxComplete::SetPlaceholderText(QString strText)
-{
-    ui.lineEdit->setPlaceholderText(strText);
+    words = slist;
 }
 
 void CLineComboxComplete::SetModifyType(ModifyType type)
@@ -185,13 +42,144 @@ void CLineComboxComplete::SetModifyType(ModifyType type)
     m_type = type;
 }
 
-void CLineComboxComplete::UpdateCombox(QStringList& slist)
+void CLineComboxComplete::focusOutEvent(QFocusEvent* e) {
+    listView->hide();
+    return QLineEdit::focusOutEvent(e);
+}
+
+void CLineComboxComplete::focusInEvent(QFocusEvent* e)
 {
-    if (ui.comboBox->count() == slist.size()) {
+    //if (this->text().isEmpty())
+    //{
+    //    listView->show();
+    //}
+    return QLineEdit::focusInEvent(e);
+}
+
+void CLineComboxComplete::keyPressEvent(QKeyEvent* e) {
+    if (!listView->isHidden()) {
+        int key = e->key();
+        int count = listView->model()->rowCount();
+        QModelIndex currentIndex = listView->currentIndex();
+
+        if (Qt::Key_Down == key) {
+            // 按向下方向键时，移动光标选中下一个完成列表中的项
+            int row = currentIndex.row() + 1;
+            if (row >= count) {
+                row = 0;
+            }
+
+            QModelIndex index = listView->model()->index(row, 0);
+            listView->setCurrentIndex(index);
+        }
+        else if (Qt::Key_Up == key) {
+            // 按向下方向键时，移动光标选中上一个完成列表中的项
+            int row = currentIndex.row() - 1;
+            if (row < 0) {
+                row = count - 1;
+            }
+            QModelIndex index = listView->model()->index(row, 0);
+            listView->setCurrentIndex(index);
+        }
+        else if (Qt::Key_Escape == key) {
+            // 按下Esc键时，隐藏完成列表
+            listView->hide();
+        }
+        else if (Qt::Key_Enter == key || Qt::Key_Return == key) {
+            // 按下回车键时，使用完成列表中选中的项，并隐藏完成列表
+            if (currentIndex.isValid()) {
+                QString text = listView->currentIndex().data().toString();
+                setText(text);
+            }
+            listView->hide();
+        }
+        else {
+            // 其他情况，隐藏完成列表，并使用QLineEdit的键盘按下事件
+            listView->hide();
+            QLineEdit::keyPressEvent(e);
+        }
+    }
+    else {
+        QLineEdit::keyPressEvent(e);
+    }
+}
+
+void CLineComboxComplete::setCompleter(const QString& text) {
+
+
+    if ((text.length() > 1) && (!listView->isHidden())) {
         return;
     }
-    m_bIgnore = true;
-    ui.comboBox->clear();
-    ui.comboBox->addItems(slist);
-    ui.comboBox->setCurrentIndex(-1);
+    /*
+    // 如果完整的完成列表中的某个单词包含输入的文本，则加入要显示的完成列表串中
+    QStringList sl;
+    foreach(QString word, words) {
+        if (word.contains(text)) {
+            sl << word;
+        }
+    }
+    */
+    QStringList sl;
+    if (text.isEmpty()) {
+        sl = words;
+        //listView->hide();
+    }
+    else {
+        std::string strAsci = text.toStdString();
+        std::wstring strWText;
+        char szEnglishText[260] = { 0 };
+        unsigned short szChineseText[260] = { 0 };
+        memcpy(szEnglishText, strAsci.c_str(), strAsci.length());
+        int j = 0;
+        for (int i = 0; i < strlen(szEnglishText); i++) {
+            if (szEnglishText[i] != 0) {
+                tool::ChinaStringHandle::EnglishToChinese(szEnglishText, szChineseText, i);
+                j++;
+            }
+            else
+                break;
+        }
+
+        char szlistItem[MAX_PATH] = { 0 };
+        for (int i = 0; i < words.size(); i++) {
+            strWText = words[i].toStdWString();
+            strAsci = tool::CodeHelper::WStr2Str(strWText);
+            ZeroMemory(szlistItem, sizeof(szlistItem));
+            memcpy(szlistItem, strAsci.c_str(), strAsci.length());
+            if (tool::ChinaStringHandle::Filter(szlistItem, szChineseText, j) == 0) {
+                if (!words[i].isEmpty()) {
+                    sl.push_back(words[i]);
+                }
+            }
+        }
+    }
+
+    model->setStringList(sl);
+    listView->setModel(model);
+
+    if (model->rowCount() == 0) {
+        listView->hide();
+        return;
+    }
+
+    // Position the text edit
+    listView->setMinimumWidth(width());
+    listView->setMaximumWidth(width());
+
+    QPoint p(0, height());
+    int x = mapToGlobal(p).x();
+    int y = mapToGlobal(p).y() + 1;
+
+    listView->move(x, y);
+    listView->show();
+}
+
+void CLineComboxComplete::completeText(const QModelIndex& index) {
+
+    QString text = index.data().toString();
+
+    setText(text);
+
+    listView->hide();
+
 }

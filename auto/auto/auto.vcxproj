@@ -116,12 +116,16 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="CLineComboxComplete.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Tools\PathHelper.h" />
     <ClInclude Include="Tools\rechelper.h" />
     <ClInclude Include="Tools\Tools.h" />
     <ClInclude Include="Tools\wavhelper.h" />
     <ClInclude Include="Tools\WTInit.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="auto.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
