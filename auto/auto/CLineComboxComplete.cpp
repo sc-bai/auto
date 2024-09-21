@@ -179,6 +179,7 @@ void CLineComboxComplete::completeText(const QModelIndex& index) {
     QString text = index.data().toString();
 
     setText(text);
+    emit signal_select(text, index.row(), m_type);
 
     listView->hide();
 

@@ -58,6 +58,9 @@
     <ClCompile Include="CLineComboxComplete.cpp">
       <Filter>Wnds</Filter>
     </ClCompile>
+    <ClCompile Include="TempWnd.cpp">
+      <Filter>Wnds</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Tools\PathHelper.h">
@@ -89,9 +92,15 @@
     <QtMoc Include="CLineComboxComplete.h">
       <Filter>Wnds</Filter>
     </QtMoc>
+    <QtMoc Include="TempWnd.h">
+      <Filter>Wnds</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="CLineComboxComplete.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="TempWnd.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -99,5 +108,10 @@
     <ResourceCompile Include="auto.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="auto.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

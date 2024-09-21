@@ -1,10 +1,13 @@
 #pragma once
 
+#include "stdafx.h"
 #include <QtWidgets/QMainWindow>
 #include <QSystemTrayIcon>
+#include <vector>
 #include "CLineComboxComplete.h"
 #include "ui_AutoMainWnd.h"
 #include "stdafx.h"
+#include "TempWnd.h"
 
 // 显示的内容
 enum class TypeItem {
@@ -25,6 +28,13 @@ public:
 private slots:
     void on_btn_open_clicked();
     void on_btn_save_clicked();
+    void on_btn_copy_clicked();
+    void on_btn_read_clicked();
+    void on_btn_modify_clicked();
+
+    void slot_tablewidget_item_clicked(QTableWidgetItem* item);
+    void slot_tablewidget_item_dbclicked(QTableWidgetItem* item);
+
 private:
     void OnUiInit();
     void InitTraySys();
@@ -39,6 +49,18 @@ private:
     void ChangeIndexVecToTextVec(std::vector<ContentListItem>& vec);
     void ChangeTextVecToIndexVec();
 
+    void ModifyTempWithConfigEx(std::vector<ContentListItem>& vec, std::vector<TempItem>& vectemp);
+    void ModifyTempWithConfig(ContentListItem& item, TempItem& tempItem);
+
+    stWeatherInfo findWeatherAndExWithCompWeather(std::wstring strWeather);
+
+    std::wstring GetCompWeatherWithIndexs(std::wstring strWeatherIndex1, std::wstring strWeatherIndex2);
+
+private: // 读预报文件
+	bool HandleReportFile(std::wstring strLineText);
+	void ModifyCtxItem(ContentListItem& item); // text
+
+
 private slots:
     void slot_text_select(QString strText, int index, ModifyType type);
 private:
@@ -49,10 +71,17 @@ private:
     bool			m_bTop = false;
     bool			m_bListInited = false;
     std::wstring m_strOpenFilePath;
-    std::vector<ContentListItem> m_vCtxIndexList;	// 显示内容集合
-    std::vector<ContentListItem> m_vCtxTextList;	// 显示索引内容
 
+    // 正常存储方便后续的wav rec索引
+    std::vector<ContentListItem> m_vCtxIndexList;	// 显示索引内容
+    
+    // m_vCtxTextList字段中不在存储weatherex的值，只用weather存储weather和weatherex的组合值，
+    // 如果有需要用到 则调用findWeatherAndExWithCompWeather找到 weather和weatherex的值
+    std::vector<ContentListItem> m_vCtxTextList;	// 显示内容集合
+    
     ContentListItem m_CopyedItem;
     int m_curIndex = 0;
+
+    TempWnd* m_pTempWnd = nullptr;
 };
 

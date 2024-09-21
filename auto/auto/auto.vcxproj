@@ -60,8 +60,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'">
+    <OutDir>../bin/</OutDir>
+    <TargetName>auto2.0</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|Win32'">
+    <OutDir>../bin/</OutDir>
+    <TargetName>auto2.0</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -103,6 +107,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CLineComboxComplete.cpp" />
+    <ClCompile Include="TempWnd.cpp" />
     <ClCompile Include="Tools\rechelper.cpp" />
     <ClCompile Include="Tools\Tools.cpp" />
     <ClCompile Include="Tools\wavhelper.cpp" />
@@ -113,11 +118,13 @@
     <ClCompile Include="AutoMainWnd.cpp" />
     <ClCompile Include="main.cpp" />
     <QtUic Include="CLineComboxComplete.ui" />
+    <QtUic Include="TempWnd.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="CLineComboxComplete.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
+    <QtMoc Include="TempWnd.h" />
     <ClInclude Include="Tools\PathHelper.h" />
     <ClInclude Include="Tools\rechelper.h" />
     <ClInclude Include="Tools\Tools.h" />
@@ -126,6 +133,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="auto.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="auto.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
