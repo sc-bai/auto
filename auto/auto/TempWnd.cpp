@@ -78,6 +78,7 @@ void TempWnd::OnSaveToFile()
 
 void TempWnd::OnUIInit()
 {
+	this->setWindowTitle(QStringLiteral("温度微调管理工具"));
 	this->setWindowIcon(QIcon(":/icon/logo"));
 
 	QStringList headers;

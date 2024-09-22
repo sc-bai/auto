@@ -11,7 +11,7 @@ CLineComboxComplete::CLineComboxComplete(QStringList words, QWidget* parent)
     listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     model = new QStringListModel(this);
     listView->setWindowFlags(Qt::ToolTip);
-    connect(this, SIGNAL(textChanged(const QString&)), this, SLOT(setCompleter(const QString&)));
+    //connect(this, SIGNAL(textChanged(const QString&)), this, SLOT(setCompleter(const QString&)));
     connect(listView, SIGNAL(clicked(const QModelIndex&)), this, SLOT(completeText(const QModelIndex&)));
     listView->hide();
 }
@@ -22,7 +22,7 @@ CLineComboxComplete::CLineComboxComplete(QWidget* parent /*= 0*/)
         listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         model = new QStringListModel(this);
         listView->setWindowFlags(Qt::ToolTip);
-        connect(this, SIGNAL(textChanged(const QString&)), this, SLOT(setCompleter(const QString&)));
+       
         connect(listView, SIGNAL(clicked(const QModelIndex&)), this, SLOT(completeText(const QModelIndex&)));
         listView->hide();
 }
@@ -30,6 +30,12 @@ CLineComboxComplete::CLineComboxComplete(QWidget* parent /*= 0*/)
 void CLineComboxComplete::SetTextContent(std::wstring strText)
 {
     this->setText(QString::fromStdWString(strText));
+
+    // 首次不绑定
+    if (m_bFirstInit == false) {
+        connect(this, SIGNAL(textChanged(const QString&)), this, SLOT(setCompleter(const QString&)));
+        m_bFirstInit = true;
+    }
 }
 
 void CLineComboxComplete::SetWordList(QStringList& slist)
@@ -125,33 +131,46 @@ void CLineComboxComplete::setCompleter(const QString& text) {
         //listView->hide();
     }
     else {
-        std::string strAsci = text.toStdString();
-        std::wstring strWText;
-        char szEnglishText[260] = { 0 };
-        unsigned short szChineseText[260] = { 0 };
-        memcpy(szEnglishText, strAsci.c_str(), strAsci.length());
-        int j = 0;
-        for (int i = 0; i < strlen(szEnglishText); i++) {
-            if (szEnglishText[i] != 0) {
-                tool::ChinaStringHandle::EnglishToChinese(szEnglishText, szChineseText, i);
-                j++;
-            }
-            else
-                break;
-        }
-
-        char szlistItem[MAX_PATH] = { 0 };
-        for (int i = 0; i < words.size(); i++) {
-            strWText = words[i].toStdWString();
-            strAsci = tool::CodeHelper::WStr2Str(strWText);
-            ZeroMemory(szlistItem, sizeof(szlistItem));
-            memcpy(szlistItem, strAsci.c_str(), strAsci.length());
-            if (tool::ChinaStringHandle::Filter(szlistItem, szChineseText, j) == 0) {
-                if (!words[i].isEmpty()) {
+        // 包含方式
+        if (m_type == ModifyType::type_temp || m_type == ModifyType::type_tempex || m_type == ModifyType::type_precipitation || m_type == ModifyType::type_windlv || m_type == ModifyType::type_windlvex) {
+            for (int i = 0; i < words.size(); i++) {
+                if (words[i].contains(text)) {
                     sl.push_back(words[i]);
                 }
             }
         }
+
+        // 首字母索引方式
+        else {
+			std::string strAsci = text.toStdString();
+			std::wstring strWText;
+			char szEnglishText[260] = { 0 };
+			unsigned short szChineseText[260] = { 0 };
+			memcpy(szEnglishText, strAsci.c_str(), strAsci.length());
+			int j = 0;
+			for (int i = 0; i < strlen(szEnglishText); i++) {
+				if (szEnglishText[i] != 0) {
+					tool::ChinaStringHandle::EnglishToChinese(szEnglishText, szChineseText, i);
+					j++;
+				}
+				else
+					break;
+			}
+
+			char szlistItem[MAX_PATH] = { 0 };
+			for (int i = 0; i < words.size(); i++) {
+				strWText = words[i].toStdWString();
+				strAsci = tool::CodeHelper::WStr2Str(strWText);
+				ZeroMemory(szlistItem, sizeof(szlistItem));
+				memcpy(szlistItem, strAsci.c_str(), strAsci.length());
+				if (tool::ChinaStringHandle::Filter(szlistItem, szChineseText, j) == 0) {
+					if (!words[i].isEmpty()) {
+						sl.push_back(words[i]);
+					}
+				}
+			}
+        }
+        
     }
 
     model->setStringList(sl);
@@ -177,6 +196,8 @@ void CLineComboxComplete::setCompleter(const QString& text) {
 void CLineComboxComplete::completeText(const QModelIndex& index) {
 
     QString text = index.data().toString();
+
+    qDebug() << index.row();
 
     setText(text);
     emit signal_select(text, index.row(), m_type);

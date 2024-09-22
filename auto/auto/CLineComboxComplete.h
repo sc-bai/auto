@@ -44,4 +44,5 @@ private:
 
 private:
     ModifyType m_type;
+    bool m_bFirstInit = false;
 };

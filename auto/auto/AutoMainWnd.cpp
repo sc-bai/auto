@@ -369,6 +369,7 @@ void AutoMainWnd::slot_tablewidget_item_dbclicked(QTableWidgetItem* item)
 
 void AutoMainWnd::OnUiInit()
 {
+    this->setWindowTitle(QStringLiteral("天气管理软件系统"));
     //this->setFont(QFont("Microsoft YaHei", 14));
     this->setWindowIcon(QIcon(":/icon/logo"));
 
@@ -658,7 +659,7 @@ void AutoMainWnd::ChangeTextVecToIndexVec()
 }
 
 /*
-    显示变动槽函数
+    显示变动槽函数  nindex无用
 */
 void AutoMainWnd::slot_text_select(QString strText, int nIndex,  ModifyType type)
 {
@@ -707,22 +708,28 @@ void AutoMainWnd::slot_text_select(QString strText, int nIndex,  ModifyType type
         break;
     case ModifyType::type_wind:
     {
-        m_vCtxTextList[nCtxIndex].strWind = funcfinditem(CItemInit::Instance()->g_scWindName, nIndex);
+        //m_vCtxTextList[nCtxIndex].strWind = funcfinditem(CItemInit::Instance()->g_scWindName, nIndex);
+        m_vCtxTextList[nCtxIndex].strWind = strItemText;
     }
         break;
     case ModifyType::type_windex:
     {
-        m_vCtxTextList[nCtxIndex].strWindEx = funcfinditem(CItemInit::Instance()->g_scWindName, nIndex);
+        //m_vCtxTextList[nCtxIndex].strWindEx = funcfinditem(CItemInit::Instance()->g_scWindName, nIndex);
+
+        m_vCtxTextList[nCtxIndex].strWindEx = strItemText;
     }
         break;
     case ModifyType::type_windlv:
     {
-        m_vCtxTextList[nCtxIndex].strWindLv = funcfinditem(CItemInit::Instance()->g_scWindLv, nIndex);
+        //m_vCtxTextList[nCtxIndex].strWindLv = funcfinditem(CItemInit::Instance()->g_scWindLv, nIndex);
+        m_vCtxTextList[nCtxIndex].strWindLv = strItemText;
     }
         break;
     case ModifyType::type_windlvex:
     {
-        m_vCtxTextList[nCtxIndex].strWindLvEx = funcfinditem(CItemInit::Instance()->g_scWindLv, nIndex);
+       // m_vCtxTextList[nCtxIndex].strWindLvEx = funcfinditem(CItemInit::Instance()->g_scWindLv, nIndex);
+
+        m_vCtxTextList[nCtxIndex].strWindLv = strItemText;
     }
         break;
     case ModifyType::type_precipitation:

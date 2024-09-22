@@ -197,7 +197,7 @@ void CItemInit::AppInit()
 		wsprintf(sz, L"%d度", i);
 		g_scTempName.push_back(sz);
 	}
-
+	/*
 	g_scWindLv.push_back(L"一二级");
 	g_scWindLv.push_back(L"二三级");
 	g_scWindLv.push_back(L"三四级");
@@ -219,7 +219,28 @@ void CItemInit::AppInit()
 	g_scWindLv.push_back(L"九级");
 	g_scWindLv.push_back(L"十级");
 	g_scWindLv.push_back(L"空");
-
+	*/
+	g_scWindLv.push_back(L"12级");
+	g_scWindLv.push_back(L"23级");
+	g_scWindLv.push_back(L"34级");
+	g_scWindLv.push_back(L"45级");
+	g_scWindLv.push_back(L"56级");
+	g_scWindLv.push_back(L"67级");
+	g_scWindLv.push_back(L"78级");
+	g_scWindLv.push_back(L"89级");
+	g_scWindLv.push_back(L"910级");
+	g_scWindLv.push_back(L"1011");
+	g_scWindLv.push_back(L"1级");
+	g_scWindLv.push_back(L"2级");
+	g_scWindLv.push_back(L"3级");
+	g_scWindLv.push_back(L"4级");
+	g_scWindLv.push_back(L"5级");
+	g_scWindLv.push_back(L"6级");
+	g_scWindLv.push_back(L"7级");
+	g_scWindLv.push_back(L"8级");
+	g_scWindLv.push_back(L"9级");
+	g_scWindLv.push_back(L"10级");
+	g_scWindLv.push_back(L"空");
 	if (tool::FileHelp::ReadConfigIniFile(std::wstring(PathHelper::Instance()->GetLibDir() + L"fd.ini"), m_scWindLvInfoEx)) {
 		for (int i = 0; i < m_scWindLvInfoEx.size(); i++) {
 			g_scWindLv.push_back(m_scWindLvInfoEx[i].strName);
