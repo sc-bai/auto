@@ -729,7 +729,7 @@ void AutoMainWnd::slot_text_select(QString strText, int nIndex,  ModifyType type
     {
        // m_vCtxTextList[nCtxIndex].strWindLvEx = funcfinditem(CItemInit::Instance()->g_scWindLv, nIndex);
 
-        m_vCtxTextList[nCtxIndex].strWindLv = strItemText;
+        m_vCtxTextList[nCtxIndex].strWindLvEx = strItemText;
     }
         break;
     case ModifyType::type_precipitation:
