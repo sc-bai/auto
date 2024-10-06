@@ -19,7 +19,7 @@ class CLineComboxComplete : public QLineEdit {
     Q_OBJECT
 
 signals:
-    void signal_select(QString strText, int index, ModifyType type);
+    void signal_select(QString strText, ModifyType type);
 
 public:
     CLineComboxComplete(QWidget* parent = 0);

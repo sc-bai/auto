@@ -4,6 +4,7 @@
 #include <QtWidgets/QMainWindow>
 #include <QSystemTrayIcon>
 #include <vector>
+#include <QTimer>
 #include "CLineComboxComplete.h"
 #include "ui_AutoMainWnd.h"
 #include "stdafx.h"
@@ -62,7 +63,7 @@ private: // ¶ÁÔ¤±¨ÎÄ¼þ
 
 
 private slots:
-    void slot_text_select(QString strText, int index, ModifyType type);
+    void slot_text_select(QString strText, ModifyType type);
 private:
     Ui::AutoMainWndClass ui;
     QSystemTrayIcon* m_pTrayIcon = nullptr;
@@ -83,5 +84,8 @@ private:
     int m_curIndex = 0;
 
     TempWnd* m_pTempWnd = nullptr;
+    bool m_doubleClicked = false;
+
+    QTableWidgetItem* m_clickedItem = nullptr;
 };
 

@@ -331,10 +331,23 @@ void AutoMainWnd::on_btn_modify_clicked()
 */
 void AutoMainWnd::slot_tablewidget_item_clicked(QTableWidgetItem* item)
 {
-	int nIndex = item->row();
-    if (nIndex < 0) return;
-	m_curIndex = nIndex;
-	m_CopyedItem = m_vCtxTextList[nIndex];
+	if (!m_doubleClicked) {
+        m_clickedItem = item;
+        QTimer::singleShot(300, [&]() {
+			if (!m_doubleClicked) {
+				// do something, listitem has been clicked once
+
+				// use QApplication::doubleClickInterval() instead of 300
+				int nIndex = m_clickedItem->row();
+				if (nIndex < 0) return;
+				m_curIndex = nIndex;
+				m_CopyedItem = m_vCtxTextList[nIndex];
+			}
+			else m_doubleClicked = false;
+        });
+		
+	}
+
 }
 
 /*
@@ -342,6 +355,8 @@ void AutoMainWnd::slot_tablewidget_item_clicked(QTableWidgetItem* item)
 */
 void AutoMainWnd::slot_tablewidget_item_dbclicked(QTableWidgetItem* item)
 {
+    m_doubleClicked = true;
+
 	int nIndex = item->row();
 	m_curIndex = nIndex;
 
@@ -661,7 +676,7 @@ void AutoMainWnd::ChangeTextVecToIndexVec()
 /*
     显示变动槽函数  nindex无用
 */
-void AutoMainWnd::slot_text_select(QString strText, int nIndex,  ModifyType type)
+void AutoMainWnd::slot_text_select(QString strText, ModifyType type)
 {
     if (m_vCtxTextList.size() == 0) return;
     int nCtxIndex = ui.tableWidget->currentRow();
@@ -689,6 +704,7 @@ void AutoMainWnd::slot_text_select(QString strText, int nIndex,  ModifyType type
         break;
 
     // type_weatherex不会出发  因为weather和weatherex 组合成了一个
+        /*
     case ModifyType::type_weatherex:
     {
         m_vCtxTextList[nCtxIndex].strWeatherEx = strItemText;
@@ -696,6 +712,7 @@ void AutoMainWnd::slot_text_select(QString strText, int nIndex,  ModifyType type
             m_vCtxTextList[nCtxIndex].strWeather = strItemText;
     }
         break;
+        */
     case ModifyType::type_temp:
     {
         m_vCtxTextList[nCtxIndex].strTemp = strItemText;
@@ -708,27 +725,21 @@ void AutoMainWnd::slot_text_select(QString strText, int nIndex,  ModifyType type
         break;
     case ModifyType::type_wind:
     {
-        //m_vCtxTextList[nCtxIndex].strWind = funcfinditem(CItemInit::Instance()->g_scWindName, nIndex);
         m_vCtxTextList[nCtxIndex].strWind = strItemText;
     }
         break;
     case ModifyType::type_windex:
     {
-        //m_vCtxTextList[nCtxIndex].strWindEx = funcfinditem(CItemInit::Instance()->g_scWindName, nIndex);
-
         m_vCtxTextList[nCtxIndex].strWindEx = strItemText;
     }
         break;
     case ModifyType::type_windlv:
     {
-        //m_vCtxTextList[nCtxIndex].strWindLv = funcfinditem(CItemInit::Instance()->g_scWindLv, nIndex);
         m_vCtxTextList[nCtxIndex].strWindLv = strItemText;
     }
         break;
     case ModifyType::type_windlvex:
     {
-       // m_vCtxTextList[nCtxIndex].strWindLvEx = funcfinditem(CItemInit::Instance()->g_scWindLv, nIndex);
-
         m_vCtxTextList[nCtxIndex].strWindLvEx = strItemText;
     }
         break;
@@ -741,7 +752,6 @@ void AutoMainWnd::slot_text_select(QString strText, int nIndex,  ModifyType type
         break;
     }
     ChangeTextVecToIndexVec();
-    //ShowContentList();
 }
 
 CLineComboxComplete* AutoMainWnd::BuilderItem(ModifyType type)
@@ -850,6 +860,8 @@ CLineComboxComplete* AutoMainWnd::BuilderItem(ModifyType type)
     return pItem;
 }
 
+
+#include <QSettings>
 void AutoMainWnd::ShowContentList()
 {
     CLineComboxComplete* pItem = nullptr;
@@ -861,9 +873,21 @@ void AutoMainWnd::ShowContentList()
 
     QCheckBox* pcb = nullptr;
     wchar_t buff[8] = { 0 };
+
+	QSettings setting("check.ini", QSettings::IniFormat);
+	setting.setValue(QString("total/count"), m_vCtxTextList.size());
+
     for (int i = 0; i < m_vCtxTextList.size(); i++)
     {
         pcb = new QCheckBox(this);
+        pcb->setChecked(setting.value(QString("check/%1").arg(i), false).toBool());
+        connect(pcb, &QCheckBox::stateChanged, [&](int stat) {
+            bool bchecked = (stat == Qt::Checked )? true : false;
+            int rowIndex = ui.tableWidget->currentRow();
+            if (rowIndex < 0) return;
+            QSettings setting("check.ini", QSettings::IniFormat);
+            setting.setValue(QString("check/%1").arg(rowIndex), bchecked);
+        });
         pcb->setMinimumSize(40, 40);
         pcb->setStyleSheet("QCheckBox{border: none; }QCheckBox::indicator{width: 40px;height: 40px;}QCheckBox::indicator:unchecked{image: url(:/icon/icon_uncheck);}QCheckBox::indicator:checked{image: url(:/icon/icon_check);}");
 

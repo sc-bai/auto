@@ -49,7 +49,9 @@ void CLineComboxComplete::SetModifyType(ModifyType type)
 }
 
 void CLineComboxComplete::focusOutEvent(QFocusEvent* e) {
-    listView->hide();
+    if (listView->hasFocus() == false) {
+        listView->hide();
+    }
     return QLineEdit::focusOutEvent(e);
 }
 
@@ -172,6 +174,11 @@ void CLineComboxComplete::setCompleter(const QString& text) {
         }
         
     }
+    if (m_type == ModifyType::type_weather || m_type == ModifyType::type_weatherex) {
+        // 选项字符串长度从小到大
+        std::sort(sl.begin(), sl.end(), [](const QString& str1, const QString& str2) { return str1.length() < str2.length(); });
+    }
+
 
     model->setStringList(sl);
     listView->setModel(model);
@@ -200,7 +207,7 @@ void CLineComboxComplete::completeText(const QModelIndex& index) {
     qDebug() << index.row();
 
     setText(text);
-    emit signal_select(text, index.row(), m_type);
+    emit signal_select(text, m_type);
 
     listView->hide();
 
