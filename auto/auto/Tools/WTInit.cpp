@@ -5,9 +5,11 @@ void CItemInit::AppInit()
 {
 	std::vector<std::wstring> sListWeather;
 
-	g_scWeatherName.push_back(L"晴天");
+	//g_scWeatherName.push_back(L"晴天");
+	g_scWeatherName.push_back(L"晴");
 	g_scWeatherName.push_back(L"多云");
-	g_scWeatherName.push_back(L"阴天");
+	//g_scWeatherName.push_back(L"阴天");
+	g_scWeatherName.push_back(L"阴");
 	g_scWeatherName.push_back(L"小雨");
 	g_scWeatherName.push_back(L"中雨");
 	g_scWeatherName.push_back(L"大雨");

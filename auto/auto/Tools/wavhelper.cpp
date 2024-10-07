@@ -63,7 +63,7 @@ bool WavHelper::BuildWavWithOnceCall(std::vector<ContentListItem>& itemlist)
 	}
 	m_vecParam.push_back(L"buildname##"); // 结束的时候再添加一个
 	// start exe
-	std::wstring strExecFilePath = PathHelper::Instance()->GetCurrentDir() + L"wavcat.exe ";
+	std::wstring strExecFilePath = PathHelper::Instance()->GetCurrentDir() + L"wavcat2.0.exe ";
 	std::wstring strCmd;
 	for (auto& item : m_vecParam) {
 		strCmd += item;
@@ -473,7 +473,7 @@ bool WavHelper::BuildAndCatWav(ContentListItem& item)
 		}
 	}
 
-	std::wstring strExecFilePath = PathHelper::Instance()->GetCurrentDir() + L"wavcat.exe ";
+	std::wstring strExecFilePath = PathHelper::Instance()->GetCurrentDir() + L"wavcat2.0.exe ";
 	std::wstring strCmd;
 	for (auto &item : files) {
 		strCmd += item;
