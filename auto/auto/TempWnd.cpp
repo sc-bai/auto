@@ -19,6 +19,7 @@ TempWnd::~TempWnd()
 
 void TempWnd::UpdateTempContent()
 {
+	m_vCtxTextList.clear();
 	m_strOpenFilePath = PathHelper::Instance()->GetModifyTempFile();
 	tool::FileHelp::ReadTempConfigFle(m_strOpenFilePath, m_vCtxTextList);
 

@@ -71,6 +71,7 @@ bool tool::FileHelp::ReadConfigIniFile(std::wstring strFilePath, std::vector<Con
 
 bool tool::FileHelp::ReadTempConfigFle(std::wstring strFilePath, std::vector<TempItem>& vec)
 {
+	vec.clear();
 	if (_waccess(strFilePath.c_str(), 0) != 0) {
 		return false;
 	}
