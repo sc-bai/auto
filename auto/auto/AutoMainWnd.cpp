@@ -14,6 +14,7 @@ AutoMainWnd::AutoMainWnd(QWidget *parent)
     CItemInit::Instance()->AppInit();
     OnUiInit();
     InitTraySys();
+    AutoOpenIniFile();
 }
 
 AutoMainWnd::~AutoMainWnd()
@@ -327,6 +328,23 @@ void AutoMainWnd::on_btn_modify_clicked()
 }
 
 /*
+    切换auto2.0.ini中的下一个ini路径
+*/
+void AutoMainWnd::on_btn_change_clicked()
+{
+    if (ini_list_.size()) {
+        ini_index_++;
+        int index = ini_index_ % ini_list_.size();
+        m_strOpenFilePath = ini_list_[index].toStdWString();
+		ui.edt_file_path->setText(QString::fromStdWString(m_strOpenFilePath));
+		std::wstring strTempModifyFile = m_strOpenFilePath.substr(0, m_strOpenFilePath.find(L".ini"));
+		PathHelper::Instance()->SetCurrentModifyFile(strTempModifyFile);
+		tool::FileHelp::ReadTempConfigFle(strTempModifyFile, CItemInit::Instance()->m_scTempModify);
+		InitList();
+    }
+}
+
+/*
     tablewidget 单击
 */
 void AutoMainWnd::slot_tablewidget_item_clicked(QTableWidgetItem* item)
@@ -432,39 +450,45 @@ void AutoMainWnd::InitTraySys()
 /*
     自动打开
 */
+
+#include <QFile>
+#include <QTextStream>
+#include <QDebug>
 void AutoMainWnd::AutoOpenIniFile()
 {
     auto inifile = PathHelper::Instance()->GetCurrentDir() + L"auto2.0.ini";
     if (_waccess(inifile.c_str(), 0) != 0) {
         return;
     }
+    QFile file = QString::fromStdWString(inifile);
 
-    std::wstring bufLine;
-    std::wifstream ifs;
-    ifs.open(inifile.c_str(), std::ios::in);
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		qDebug() << "Unable to open file for reading";
+        return;
+	}
 
-    if (ifs.is_open()) {
-        while (getline(ifs, bufLine)) {
-            break;
-        }
-        ifs.close();
-    }
+	QTextStream in(&file);
+	while (!in.atEnd()) {
+		QString line = in.readLine();
+		if (_waccess(line.toStdWString().c_str(), 0) != 0) {
+			continue;
+		}
+        ini_list_.push_back(line);
+	}
+	file.close();
 
-    if (_waccess(bufLine.c_str(), 0) != 0) {
+    if (ini_list_.size() == 0) {
         return;
     }
-
-    m_strOpenFilePath = bufLine;
+    m_strOpenFilePath = ini_list_[0].toStdWString();
+    ini_index_ = 0;
 
     ui.edt_file_path->setText(QString::fromStdWString(m_strOpenFilePath));
 
-    if (!m_strOpenFilePath.empty()) {
-
-        std::wstring strTempModifyFile = m_strOpenFilePath.substr(0, m_strOpenFilePath.find(L".ini"));
-        PathHelper::Instance()->SetCurrentModifyFile(strTempModifyFile);
-        tool::FileHelp::ReadTempConfigFle(strTempModifyFile, CItemInit::Instance()->m_scTempModify);
-        InitList();
-    }
+	std::wstring strTempModifyFile = m_strOpenFilePath.substr(0, m_strOpenFilePath.find(L".ini"));
+	PathHelper::Instance()->SetCurrentModifyFile(strTempModifyFile);
+	tool::FileHelp::ReadTempConfigFle(strTempModifyFile, CItemInit::Instance()->m_scTempModify);
+	InitList();
 }
 
 

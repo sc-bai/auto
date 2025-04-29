@@ -1,6 +1,7 @@
 #include "AutoMainWnd.h"
 #include <QtWidgets/QApplication>
 #include "Tools/rechelper.h"
+#include <QTextCodec>
 
 void ModifyDateRec()
 {
@@ -12,6 +13,9 @@ void ModifyDateRec()
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
+	QTextCodec* codec = QTextCodec::codecForName("UTF-8");
+	QTextCodec::setCodecForLocale(codec);
 
     ModifyDateRec();
 

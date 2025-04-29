@@ -32,6 +32,7 @@ private slots:
     void on_btn_copy_clicked();
     void on_btn_read_clicked();
     void on_btn_modify_clicked();
+    void on_btn_change_clicked();
 
     void slot_tablewidget_item_clicked(QTableWidgetItem* item);
     void slot_tablewidget_item_dbclicked(QTableWidgetItem* item);
@@ -87,5 +88,9 @@ private:
     bool m_doubleClicked = false;
 
     QTableWidgetItem* m_clickedItem = nullptr;
+
+
+    QStringList ini_list_;
+    uint64_t ini_index_ = 0;
 };
 
