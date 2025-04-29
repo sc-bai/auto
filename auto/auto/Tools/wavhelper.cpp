@@ -409,6 +409,9 @@ std::vector<std::wstring> WavHelper::GetWavFilesFromIndex(ContentListItem& item)
 	}
 	buildvec.push_back(m_strWavDir + strTmp);
 
+	// feat : 每个语音后面新增这个语音 250429
+	buildvec.push_back(L"kk0030.wav");
+
 	bRet = true;
 exit:
 	if(bRet)

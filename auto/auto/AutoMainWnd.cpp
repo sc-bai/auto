@@ -65,6 +65,7 @@ void AutoMainWnd::on_btn_save_clicked()
 	std::wstring strFileName =ui.edt_file_path->text().toStdWString();
 	tool::FileHelp::WriteConfigIniFile(strFileName, m_vCtxIndexList);
 #ifdef _DEBUG
+    RECHelper::Instance()->ModifyRecFileAll(m_vCtxIndexList);
 	WavHelper::Instance()->BuildWavWithOnceCall(m_vCtxIndexList);
 	//WavHelper::Instance()->BuildAndCatWav(m_vCtxIndexList[m_pCtList->GetCurSel()]);
 	//RECHelper::Instance()->ModifyRecFileEx(m_vCtxIndexList[m_pCtList->GetCurSel()]);

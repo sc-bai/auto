@@ -56,7 +56,11 @@ bool tool::FileHelp::ReadConfigIniFile(std::wstring strFilePath, std::vector<Con
 			GetPrivateProfileStringA(tool::CodeHelper::WStr2Str(strNodeIndex).c_str(), "location", "", sz, 128, tool::CodeHelper::WStr2Str(strFilePath).c_str());
 			item.strLocation = tool::CodeHelper::Utf8ToUnicode(sz);
 
-			item.strRecName = GetIniKeyValue(strFilePath, strNodeIndex, L"rec");
+			memset(sz, 0, 128);
+			GetPrivateProfileStringA(tool::CodeHelper::WStr2Str(strNodeIndex).c_str(), "rec", "", sz, 128, tool::CodeHelper::WStr2Str(strFilePath).c_str());
+			item.strRecName = tool::CodeHelper::Utf8ToUnicode(sz);
+
+			//item.strRecName = GetIniKeyValue(strFilePath, strNodeIndex, L"rec");
 			item.strWavName = GetIniKeyValue(strFilePath, strNodeIndex, L"wav");
 
 			vec.push_back(item);

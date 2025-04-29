@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 24,10,7,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 2025,4,29,1
+ PRODUCTVERSION 1,0,0,2
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "TODO: <公司名>"
             VALUE "FileDescription", "TODO: <文件说明>"
-            VALUE "FileVersion", "24.10.7.1"
+            VALUE "FileVersion", "2025.4.29.1"
             VALUE "InternalName", "auto.exe"
             VALUE "LegalCopyright", "Copyright (C) 2024"
             VALUE "OriginalFilename", "auto.exe"
             VALUE "ProductName", "TODO: <产品名>"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductVersion", "1.0.0.2"
         END
     END
     BLOCK "VarFileInfo"
