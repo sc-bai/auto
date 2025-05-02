@@ -5,10 +5,14 @@
 #include <QSystemTrayIcon>
 #include <vector>
 #include <QTimer>
+#include <atomic>
+
+#include <thread>
 #include "CLineComboxComplete.h"
 #include "ui_AutoMainWnd.h"
 #include "stdafx.h"
 #include "TempWnd.h"
+#include "TTSHelper.h"
 
 // 显示的内容
 enum class TypeItem {
@@ -22,6 +26,9 @@ class AutoMainWnd : public QMainWindow
 {
     Q_OBJECT
 
+signals:
+    void signal_start(int index);
+    void signal_finish();
 public:
     AutoMainWnd(QWidget *parent = nullptr);
     ~AutoMainWnd();
@@ -45,6 +52,11 @@ private:
     void AutoOpenIniFile();
     void InitList();
     void InitContentList();	// 内容
+
+    void SetCurrentItemBackColor(int index);
+    std::string GetTTSBuildFile(ContentListItem& item);
+    std::string BuildTTSText(ContentListItem& item);
+    void GetCurrentVoiceType();
 
     CLineComboxComplete* BuilderItem(ModifyType type);
     void ShowContentList();
@@ -92,5 +104,10 @@ private:
 
     QStringList ini_list_;
     uint64_t ini_index_ = 0;
+
+    voice_type m_voice_type = voice_type::type_unkown;
+
+    std::thread m_work_thread;
+    std::atomic<bool> m_thread_running_ = false;
 };
 

@@ -6,6 +6,9 @@
 #include "AutoMainWnd.h"
 #include "Tools/wavhelper.h"
 #include "Tools/rechelper.h"
+#include "TTSHelper.h"
+#include <QSettings>
+#include <QDebug>
 
 AutoMainWnd::AutoMainWnd(QWidget *parent)
     : QMainWindow(parent)
@@ -15,6 +18,18 @@ AutoMainWnd::AutoMainWnd(QWidget *parent)
     OnUiInit();
     InitTraySys();
     AutoOpenIniFile();
+
+    GetCurrentVoiceType();
+
+    connect(this, &AutoMainWnd::signal_start, this, [&](int index) {
+        qDebug() << "signal_start:" << index <<",thread_id:"<<::GetCurrentThreadId();
+        SetCurrentItemBackColor(index);
+        },Qt::QueuedConnection);
+	connect(this, &AutoMainWnd::signal_finish, [&]() {
+        ui.btn_save->setEnabled(true);
+		SetCurrentItemBackColor(-1);
+        MessageBox(0, L"    结束! <<北京中天华视气象科技有限公司>>\n\n                        010-62146148", L"ok", MB_OK | MB_ICONINFORMATION);
+		});
 }
 
 AutoMainWnd::~AutoMainWnd()
@@ -56,6 +71,101 @@ void AutoMainWnd::on_btn_open_clicked()
     }
 }
 
+void  AutoMainWnd::SetCurrentItemBackColor(int index)
+{
+	QTableWidgetItem* item = nullptr;
+	for (int i = 0; i < m_vCtxIndexList.size(); i++) {
+		item = ui.tableWidget->item(i, 1);
+		if (item == nullptr)
+			continue;
+		if (i == index) {
+			item->setBackground(QBrush(QColor(Qt::yellow)));
+		}
+		else {
+			item->setBackground(QBrush(QColor(Qt::white)));
+		}
+	}
+}
+
+/*
+    根据一行内容数据 获取tts生成的文件路径
+*/
+std::string AutoMainWnd::GetTTSBuildFile(ContentListItem& item)
+{
+    std::wstring tts_dir = PathHelper::Instance()->GetTTSDir();
+    tts_dir += item.strWavName;
+    std::string ret = tool::CodeHelper::UnicodeToUtf8(tts_dir);
+    return ret;
+}
+
+/*
+    根据一行内容生成要tts组成的语音
+*/
+std::string AutoMainWnd::BuildTTSText(ContentListItem& item)
+{
+    std::wstring strText;
+    strText.append(item.strLocation);
+    strText.append(L",");
+    strText.append(item.strWeather);
+
+	int nMost = _wtoi(item.strTempMost.c_str());
+	if (nMost == 1) { // 最低温度wd001.wav
+        strText.append(L",最低温度");
+        strText.append(item.strTemp);
+	}
+	else if (nMost == 2) { // 最高温度wd000.wav
+		strText.append(L",最高温度");
+		strText.append(item.strTempEx);
+	}
+	else if (nMost == 3) {	// 最低 最高温度
+		strText.append(L",最低温度");
+		strText.append(item.strTemp);
+		strText.append(L",最高温度");
+		strText.append(item.strTempEx);
+	}
+
+    if (item.strWind == item.strWindEx) {
+        strText.append(L",");
+        strText.append(item.strWind);
+    }
+    else {
+        strText.append(L",");
+        strText.append(item.strWind);
+        strText.append(L"转");
+        strText.append(item.strWindEx);
+    }
+
+    if (item.strWindLv == item.strWindLvEx) {
+		strText.append(L",");
+		strText.append(item.strWindLv);
+    }
+    else {
+		strText.append(L",");
+		strText.append(item.strWindLv);
+		strText.append(L"到");
+		strText.append(item.strWindLvEx);
+    }
+
+    if (item.strPrecipitation != L"0%") {
+		strText.append(L",降水概率");
+		strText.append(item.strPrecipitation);
+    }
+    qDebug() << "tts build text:" << strText;
+    return tool::CodeHelper::WStr2Str(strText);
+}
+
+/*
+    获取配置
+*/
+void AutoMainWnd::GetCurrentVoiceType()
+{
+    std::wstring config = PathHelper::Instance()->GetTTSConfig();
+    QSettings settings(QString::fromStdWString(config), QSettings::IniFormat);
+
+    int voice = settings.value("tts/voice", 1).toInt();
+    m_voice_type = (voice_type)voice;
+}
+
 /*
     保存并转换
 */
@@ -64,15 +174,87 @@ void AutoMainWnd::on_btn_save_clicked()
 	if (m_vCtxTextList.size() == 0) return;
 	std::wstring strFileName =ui.edt_file_path->text().toStdWString();
 	tool::FileHelp::WriteConfigIniFile(strFileName, m_vCtxIndexList);
+    if (m_thread_running_.load()) {
+        return;
+    }
+    ui.btn_save->setEnabled(false);
+    m_work_thread = std::thread([&]() {
+        qDebug() << ",thread_id:" << ::GetCurrentThreadId();
+
+        m_thread_running_.store(true);
+        std::vector<ContentListItem> lineItem;
+        std::string build_file_name;
+        std::string build_text;
+        for (size_t i = 0; i < m_vCtxIndexList.size(); i++)
+        {
+            emit signal_start(i);
+            //SetCurrentItemBackColor(i);
+            /*
+            lineItem.clear();
+            lineItem.push_back(m_vCtxIndexList[i]);
+            WavHelper::Instance()->BuildWavWithOnceCall(m_vCtxIndexList);
+            */
+            build_file_name = GetTTSBuildFile(m_vCtxTextList[i]);
+            build_text = BuildTTSText(m_vCtxTextList[i]);
+            TTSHelper::instance()->do_tts(build_text, build_file_name, m_voice_type);
+            Sleep(500);
+        }
+        RECHelper::Instance()->ModifyRecFileAll(m_vCtxIndexList);
+        emit signal_finish();
+        m_thread_running_.store(false);
+        return;
+        
+        });
+    m_work_thread.detach();
+    return;
+
 #ifdef _DEBUG
+
+
+    std::vector<ContentListItem> lineItem;
+    std::string build_file_name;
+    std::string build_text;
+    for (size_t i = 0; i < m_vCtxIndexList.size(); i++)
+    {
+        SetCurrentItemBackColor(i);
+        /*
+        lineItem.clear();
+        lineItem.push_back(m_vCtxIndexList[i]);
+        WavHelper::Instance()->BuildWavWithOnceCall(m_vCtxIndexList);
+        */
+        build_file_name = GetTTSBuildFile(m_vCtxTextList[i]);
+        build_text = BuildTTSText(m_vCtxTextList[i]);
+        TTSHelper::instance()->do_tts(build_text, build_file_name, m_voice_type);
+    }
+
+
+    return;
+
+
     RECHelper::Instance()->ModifyRecFileAll(m_vCtxIndexList);
 	WavHelper::Instance()->BuildWavWithOnceCall(m_vCtxIndexList);
 	//WavHelper::Instance()->BuildAndCatWav(m_vCtxIndexList[m_pCtList->GetCurSel()]);
 	//RECHelper::Instance()->ModifyRecFileEx(m_vCtxIndexList[m_pCtList->GetCurSel()]);
 #else
 	//WavHelper::Instance()->BuildAndCatWavAll(m_vCtxIndexList);
-	WavHelper::Instance()->BuildWavWithOnceCall(m_vCtxIndexList);
-	RECHelper::Instance()->ModifyRecFileAll(m_vCtxIndexList);
+
+    std::vector<ContentListItem> lineItem;
+    std::string build_file_name;
+    std::string build_text;
+    for (size_t i = 0; i < m_vCtxIndexList.size(); i++)
+    {
+        SetCurrentItemBackColor(i);
+        /*
+        lineItem.clear();
+        lineItem.push_back(m_vCtxIndexList[i]);
+        WavHelper::Instance()->BuildWavWithOnceCall(m_vCtxIndexList);
+        */
+        build_file_name = GetTTSBuildFile(m_vCtxTextList[i]);
+        build_text = BuildTTSText(m_vCtxTextList[i]);
+        TTSHelper::instance()->do_tts(build_text, build_file_name, m_voice_type);
+    }
+
+	//RECHelper::Instance()->ModifyRecFileAll(m_vCtxIndexList);
 #endif // _DEBUG
 
 	MessageBox(0, L"    结束! <<北京中天华视气象科技有限公司>>\n\n                        010-62146148", L"ok", MB_OK | MB_ICONINFORMATION);
@@ -333,6 +515,7 @@ void AutoMainWnd::on_btn_modify_clicked()
 */
 void AutoMainWnd::on_btn_change_clicked()
 {
+    m_CopyedItem.Clean();
     if (ini_list_.size()) {
         ini_index_++;
         int index = ini_index_ % ini_list_.size();

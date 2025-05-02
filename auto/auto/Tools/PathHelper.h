@@ -16,6 +16,11 @@ public:
 		if (0 >= offset)
 			return;
 		m_strExeDir = m_strExeDir.substr(0, offset + 1);
+
+		std::wstring tts_dir = GetTTSDir();
+		if (_waccess(tts_dir.c_str(), 0) != 0) {
+			::CreateDirectory(tts_dir.c_str(), nullptr);
+		}
 	}
 	std::wstring GetCurrentDir() {
 		return m_strExeDir;
@@ -32,6 +37,13 @@ public:
 	std::wstring GetRecDir() {
 		return m_strExeDir + L"rec\\";
 	}
+	std::wstring GetTTSDir() {
+		return m_strExeDir + L"tts\\";
+	}
+	std::wstring GetTTSConfig() {
+		return m_strExeDir + L"tts\\config.ini";
+	}
+
 	void SetCurrentModifyFile(std::wstring str) {
 		m_strTempModifyFile = str;
 	}

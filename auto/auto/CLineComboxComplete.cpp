@@ -3,12 +3,15 @@
 #include <QListView>
 #include <QStringListModel>
 #include <QDebug>
+#include <QScrollBar>
 #include "stdafx.h"
 
 CLineComboxComplete::CLineComboxComplete(QStringList words, QWidget* parent)
     : QLineEdit(parent), words(words) {
-    listView = new QListView(this);
+    listView = new MyListView(this);
     listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    //listView->verticalScrollBar()->setFocusPolicy(Qt::StrongFocus);
+
     model = new QStringListModel(this);
     listView->setWindowFlags(Qt::ToolTip);
     //connect(this, SIGNAL(textChanged(const QString&)), this, SLOT(setCompleter(const QString&)));
@@ -18,10 +21,11 @@ CLineComboxComplete::CLineComboxComplete(QStringList words, QWidget* parent)
 
 CLineComboxComplete::CLineComboxComplete(QWidget* parent /*= 0*/)
     : QLineEdit(parent) {
-        listView = new QListView(this);
+        listView = new MyListView(this);
         listView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         model = new QStringListModel(this);
         listView->setWindowFlags(Qt::ToolTip);
+        //listView->verticalScrollBar()->setFocusPolicy(Qt::StrongFocus);
        
         connect(listView, SIGNAL(clicked(const QModelIndex&)), this, SLOT(completeText(const QModelIndex&)));
         listView->hide();
@@ -50,7 +54,7 @@ void CLineComboxComplete::SetModifyType(ModifyType type)
 
 void CLineComboxComplete::focusOutEvent(QFocusEvent* e) {
     if (listView->hasFocus() == false) {
-        listView->hide();
+        //listView->hide();
     }
     return QLineEdit::focusOutEvent(e);
 }
@@ -203,6 +207,9 @@ void CLineComboxComplete::setCompleter(const QString& text) {
 void CLineComboxComplete::completeText(const QModelIndex& index) {
 
     QString text = index.data().toString();
+    if (text.isEmpty()) {
+        return;
+    }
 
     qDebug() << index.row();
 

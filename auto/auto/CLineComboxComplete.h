@@ -10,9 +10,33 @@
 #include <QItemDelegate>
 #include <QListView>
 #include <QLineEdit>
+#include <QScrollBar>
+
 class QListView;
 class QStringListModel;
 class QModelIndex;
+
+// C++ 示例
+class MyListView : public QListView {
+public:
+	MyListView(QWidget* parent = nullptr) : QListView(parent) {
+		verticalScrollBar()->installEventFilter(this);
+	}
+
+    virtual void focusOutEvent(QFocusEvent* e)
+    {
+        this->hide();
+    }
+
+	bool eventFilter(QObject* obj, QEvent* event) override {
+		//if (obj == verticalScrollBar() && event->type() == QEvent::MouseButtonPress) {
+		//	// 拦截滚动条的鼠标点击事件，不传递焦点
+		//	return true;
+		//}
+		return QListView::eventFilter(obj, event);
+	}
+};
+
 
 class CLineComboxComplete : public QLineEdit {
 
@@ -39,7 +63,8 @@ protected:
 private:
 
     QStringList words; // 整个完成列表的单词
-    QListView* listView; // 完成列表
+    //QListView* listView; // 完成列表
+    MyListView* listView; // 完成列表
     QStringListModel* model; // 完成列表的model
 
 private:

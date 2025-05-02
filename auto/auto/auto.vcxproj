@@ -70,14 +70,23 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../third/tts</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>../third/tts/libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>msc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../third/tts</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>../third/tts/libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>msc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'" Label="Configuration">
     <ClCompile>
@@ -114,6 +123,7 @@
     <ClCompile Include="Tools\Tools.cpp" />
     <ClCompile Include="Tools\wavhelper.cpp" />
     <ClCompile Include="Tools\WTInit.cpp" />
+    <ClCompile Include="TTSHelper.cpp" />
     <QtRcc Include="AutoMainWnd.qrc" />
     <QtUic Include="AutoMainWnd.ui" />
     <QtMoc Include="AutoMainWnd.h" />
@@ -123,6 +133,7 @@
     <QtUic Include="TempWnd.ui" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="TTSHelper.h" />
     <QtMoc Include="CLineComboxComplete.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
