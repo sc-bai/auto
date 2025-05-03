@@ -1,13 +1,6 @@
 #pragma once
 #include <string>
-
-enum voice_type {
-	type_unkown = 0,
-	type_xiaoshan,		//聆小珊-普通话
-	type_chaoge,		//超哥-普通话
-	type_guli,		//帕蒂古里-维吾尔语
-	type_dawa,		//达娃-藏语 
-};
+#include <vector>
 
 /* wav音频头部格式 */
 typedef struct _wave_pcm_hdr
@@ -43,7 +36,11 @@ public:
 
 	int init();
 
-	int do_tts(std::string strText, std::string strBuildFilePath, voice_type type);
+	int do_tts(std::string strText, std::vector<std::string> strBuildFilePath, std::vector<std::string> voice_params);
+
+private:
+	int do_tts_once(std::string strText, std::string strBuildFilePath, std::string voice_params);
+	
 private:
 	void uninit();
 };

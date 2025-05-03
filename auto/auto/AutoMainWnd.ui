@@ -20,21 +20,9 @@
       <property name="title">
        <string/>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout">
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
        <property name="spacing">
-        <number>10</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
+        <number>6</number>
        </property>
        <item>
         <widget class="QPushButton" name="btn_open">
@@ -63,7 +51,7 @@
         <widget class="QPushButton" name="btn_change">
          <property name="minimumSize">
           <size>
-           <width>100</width>
+           <width>60</width>
            <height>30</height>
           </size>
          </property>
@@ -86,20 +74,60 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="btn_copy">
-         <property name="minimumSize">
-          <size>
-           <width>100</width>
-           <height>30</height>
-          </size>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="spacing">
+          <number>0</number>
          </property>
-         <property name="text">
-          <string>一键粘贴</string>
-         </property>
-        </widget>
+         <item>
+          <widget class="QPushButton" name="btn_copy">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>一键粘贴</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QCheckBox" name="checkBox_wind">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>禁风</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBox_water">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>禁水</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout">
+         <property name="spacing">
+          <number>0</number>
+         </property>
          <item>
           <widget class="QPushButton" name="btn_read">
            <property name="minimumSize">

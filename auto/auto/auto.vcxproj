@@ -70,22 +70,22 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;../third/tts</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../third/tts;../third/libhv/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>../third/tts/libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>msc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../third/tts/libs;../third/libhv/lib/debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>msc.lib;hv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;../third/tts</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../third/tts;../third/libhv/include</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>../third/tts/libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>msc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../third/tts/libs;../third/libhv/lib/release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>msc.lib;hv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'" Label="Configuration">
@@ -118,6 +118,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CLineComboxComplete.cpp" />
+    <ClCompile Include="Net\HvNetManager.cpp" />
     <ClCompile Include="TempWnd.cpp" />
     <ClCompile Include="Tools\rechelper.cpp" />
     <ClCompile Include="Tools\Tools.cpp" />
@@ -133,6 +134,7 @@
     <QtUic Include="TempWnd.ui" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Net\HvNetManager.h" />
     <ClInclude Include="TTSHelper.h" />
     <QtMoc Include="CLineComboxComplete.h" />
     <ClInclude Include="resource.h" />

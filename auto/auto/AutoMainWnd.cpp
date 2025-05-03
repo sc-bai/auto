@@ -9,6 +9,7 @@
 #include "TTSHelper.h"
 #include <QSettings>
 #include <QDebug>
+#include <QFile>
 
 AutoMainWnd::AutoMainWnd(QWidget *parent)
     : QMainWindow(parent)
@@ -25,11 +26,11 @@ AutoMainWnd::AutoMainWnd(QWidget *parent)
         qDebug() << "signal_start:" << index <<",thread_id:"<<::GetCurrentThreadId();
         SetCurrentItemBackColor(index);
         },Qt::QueuedConnection);
-	connect(this, &AutoMainWnd::signal_finish, [&]() {
+	connect(this, &AutoMainWnd::signal_finish, this, [&]() {
         ui.btn_save->setEnabled(true);
 		SetCurrentItemBackColor(-1);
         MessageBox(0, L"    结束! <<北京中天华视气象科技有限公司>>\n\n                        010-62146148", L"ok", MB_OK | MB_ICONINFORMATION);
-		});
+		}, Qt::QueuedConnection);
 }
 
 AutoMainWnd::~AutoMainWnd()
@@ -90,11 +91,30 @@ void  AutoMainWnd::SetCurrentItemBackColor(int index)
 /*
     根据一行内容数据 获取tts生成的文件路径
 */
-std::string AutoMainWnd::GetTTSBuildFile(ContentListItem& item)
+std::vector<std::string> AutoMainWnd::GetTTSBuildFile(ContentListItem& item)
 {
-    std::wstring tts_dir = PathHelper::Instance()->GetTTSDir();
-    tts_dir += item.strWavName;
-    std::string ret = tool::CodeHelper::UnicodeToUtf8(tts_dir);
+    std::vector<std::string> ret;
+
+    std::wstring tts_dir = PathHelper::Instance()->GetWavDir();
+    std::wstring build_path = tts_dir;
+
+    std::wstring build_file_name;
+    int index = item.strWavName.find(L".");
+    if (index == -1) {
+        return ret;
+    }
+    build_file_name = item.strWavName.substr(0, index);
+    
+    for (int i=0;i< tts_voice_params_.size();i++)
+    {
+        build_path = tts_dir;
+        build_path += build_file_name;
+        build_path += L"_";
+        build_path += tool::CodeHelper::Str2WStr(tts_voice_params_[i]);
+        build_path += L".wav";
+        ret.push_back(tool::CodeHelper::UnicodeToUtf8(build_path));
+    }
+
     return ret;
 }
 
@@ -154,16 +174,35 @@ std::string AutoMainWnd::BuildTTSText(ContentListItem& item)
     return tool::CodeHelper::WStr2Str(strText);
 }
 
+void readFileLineByLine(const QString& filePath, std::vector<std::string> &lines) {
+	QFile file(filePath);
+    lines.clear();
+	// 打开文件
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		qWarning() << "无法打开文件：" << file.errorString();
+		return;
+	}
+
+	QTextStream in(&file);
+	QString line;
+
+	// 逐行读取
+	while (in.readLineInto(&line)) { // 或 while (!(line = in.readLine()).isNull())
+		qDebug().noquote() << "读取行：" << line;
+        lines.push_back(line.toStdString());
+	}
+
+	file.close();
+}
+
 /*
     获取配置
 */
 void AutoMainWnd::GetCurrentVoiceType()
 {
     std::wstring config = PathHelper::Instance()->GetTTSConfig();
-    QSettings settings(QString::fromStdWString(config), QSettings::IniFormat);
-
-    int voice = settings.value("tts/voice", 1).toInt();
-    m_voice_type = (voice_type)voice;
+    QString str_config = QString::fromStdWString(config);
+    readFileLineByLine(str_config, tts_voice_params_);
 }
 
 /*
@@ -182,22 +221,18 @@ void AutoMainWnd::on_btn_save_clicked()
         qDebug() << ",thread_id:" << ::GetCurrentThreadId();
 
         m_thread_running_.store(true);
-        std::vector<ContentListItem> lineItem;
-        std::string build_file_name;
+        std::vector<std::string> build_file_names;
         std::string build_text;
         for (size_t i = 0; i < m_vCtxIndexList.size(); i++)
         {
             emit signal_start(i);
-            //SetCurrentItemBackColor(i);
-            /*
-            lineItem.clear();
-            lineItem.push_back(m_vCtxIndexList[i]);
-            WavHelper::Instance()->BuildWavWithOnceCall(m_vCtxIndexList);
-            */
-            build_file_name = GetTTSBuildFile(m_vCtxTextList[i]);
+            //WavHelper::Instance()->BuildWavWithOnceCall(m_vCtxIndexList);
+            if(tts_voice_params_.empty())
+                continue;
+
+            build_file_names = GetTTSBuildFile(m_vCtxTextList[i]);
             build_text = BuildTTSText(m_vCtxTextList[i]);
-            TTSHelper::instance()->do_tts(build_text, build_file_name, m_voice_type);
-            Sleep(500);
+            TTSHelper::instance()->do_tts(build_text, build_file_names, tts_voice_params_);
         }
         RECHelper::Instance()->ModifyRecFileAll(m_vCtxIndexList);
         emit signal_finish();
@@ -207,57 +242,6 @@ void AutoMainWnd::on_btn_save_clicked()
         });
     m_work_thread.detach();
     return;
-
-#ifdef _DEBUG
-
-
-    std::vector<ContentListItem> lineItem;
-    std::string build_file_name;
-    std::string build_text;
-    for (size_t i = 0; i < m_vCtxIndexList.size(); i++)
-    {
-        SetCurrentItemBackColor(i);
-        /*
-        lineItem.clear();
-        lineItem.push_back(m_vCtxIndexList[i]);
-        WavHelper::Instance()->BuildWavWithOnceCall(m_vCtxIndexList);
-        */
-        build_file_name = GetTTSBuildFile(m_vCtxTextList[i]);
-        build_text = BuildTTSText(m_vCtxTextList[i]);
-        TTSHelper::instance()->do_tts(build_text, build_file_name, m_voice_type);
-    }
-
-
-    return;
-
-
-    RECHelper::Instance()->ModifyRecFileAll(m_vCtxIndexList);
-	WavHelper::Instance()->BuildWavWithOnceCall(m_vCtxIndexList);
-	//WavHelper::Instance()->BuildAndCatWav(m_vCtxIndexList[m_pCtList->GetCurSel()]);
-	//RECHelper::Instance()->ModifyRecFileEx(m_vCtxIndexList[m_pCtList->GetCurSel()]);
-#else
-	//WavHelper::Instance()->BuildAndCatWavAll(m_vCtxIndexList);
-
-    std::vector<ContentListItem> lineItem;
-    std::string build_file_name;
-    std::string build_text;
-    for (size_t i = 0; i < m_vCtxIndexList.size(); i++)
-    {
-        SetCurrentItemBackColor(i);
-        /*
-        lineItem.clear();
-        lineItem.push_back(m_vCtxIndexList[i]);
-        WavHelper::Instance()->BuildWavWithOnceCall(m_vCtxIndexList);
-        */
-        build_file_name = GetTTSBuildFile(m_vCtxTextList[i]);
-        build_text = BuildTTSText(m_vCtxTextList[i]);
-        TTSHelper::instance()->do_tts(build_text, build_file_name, m_voice_type);
-    }
-
-	//RECHelper::Instance()->ModifyRecFileAll(m_vCtxIndexList);
-#endif // _DEBUG
-
-	MessageBox(0, L"    结束! <<北京中天华视气象科技有限公司>>\n\n                        010-62146148", L"ok", MB_OK | MB_ICONINFORMATION);
 }
 
 /*
@@ -284,11 +268,15 @@ void AutoMainWnd::on_btn_copy_clicked()
         m_vCtxTextList[i].strWeather = m_CopyedItem.strWeather;
         m_vCtxTextList[i].strTemp = m_CopyedItem.strTemp;
         m_vCtxTextList[i].strTempEx = m_CopyedItem.strTempEx;
-        m_vCtxTextList[i].strWind = m_CopyedItem.strWind;
-        m_vCtxTextList[i].strWindEx = m_CopyedItem.strWindEx;
-        m_vCtxTextList[i].strWindLv = m_CopyedItem.strWindLv;
-        m_vCtxTextList[i].strWindLvEx = m_CopyedItem.strWindLvEx;
-        m_vCtxTextList[i].strPrecipitation = m_CopyedItem.strPrecipitation;
+        if (ui.checkBox_wind->isChecked() == false) {
+			m_vCtxTextList[i].strWind = m_CopyedItem.strWind;
+			m_vCtxTextList[i].strWindEx = m_CopyedItem.strWindEx;
+			m_vCtxTextList[i].strWindLv = m_CopyedItem.strWindLv;
+			m_vCtxTextList[i].strWindLvEx = m_CopyedItem.strWindLvEx;
+        }
+        if (ui.checkBox_water->isChecked() == false) {
+            m_vCtxTextList[i].strPrecipitation = m_CopyedItem.strPrecipitation;
+        }
     }
 
 	// 复制的时候根据配置修改
@@ -567,11 +555,16 @@ void AutoMainWnd::slot_tablewidget_item_dbclicked(QTableWidgetItem* item)
 	m_vCtxTextList[nIndex].strWeatherEx = m_CopyedItem.strWeatherEx;
 	m_vCtxTextList[nIndex].strTemp = m_CopyedItem.strTemp;
 	m_vCtxTextList[nIndex].strTempEx = m_CopyedItem.strTempEx;
-	m_vCtxTextList[nIndex].strWind = m_CopyedItem.strWind;
-	m_vCtxTextList[nIndex].strWindEx = m_CopyedItem.strWindEx;
-	m_vCtxTextList[nIndex].strWindLv = m_CopyedItem.strWindLv;
-	m_vCtxTextList[nIndex].strWindLvEx = m_CopyedItem.strWindLvEx;
-	m_vCtxTextList[nIndex].strPrecipitation = m_CopyedItem.strPrecipitation;
+
+	if (ui.checkBox_wind->isChecked() == false) {
+		m_vCtxTextList[nIndex].strWind = m_CopyedItem.strWind;
+		m_vCtxTextList[nIndex].strWindEx = m_CopyedItem.strWindEx;
+		m_vCtxTextList[nIndex].strWindLv = m_CopyedItem.strWindLv;
+		m_vCtxTextList[nIndex].strWindLvEx = m_CopyedItem.strWindLvEx;
+	}
+	if (ui.checkBox_water->isChecked() == false) {
+		m_vCtxTextList[nIndex].strPrecipitation = m_CopyedItem.strPrecipitation;
+	}
 
 	// 复制的时候根据配置微调温度
 	for (auto& item : CItemInit::Instance()->m_scTempModify) {

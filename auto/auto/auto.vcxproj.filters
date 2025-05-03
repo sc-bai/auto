@@ -30,6 +30,9 @@
     <Filter Include="tts">
       <UniqueIdentifier>{2c43e367-d07a-433c-99d4-71f6d9127694}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Net">
+      <UniqueIdentifier>{281ac63f-4fa3-4fab-8ed6-a05807d921d6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="AutoMainWnd.qrc">
@@ -67,6 +70,9 @@
     <ClCompile Include="TTSHelper.cpp">
       <Filter>tts</Filter>
     </ClCompile>
+    <ClCompile Include="Net\HvNetManager.cpp">
+      <Filter>Net</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Tools\PathHelper.h">
@@ -92,6 +98,9 @@
     </ClInclude>
     <ClInclude Include="TTSHelper.h">
       <Filter>tts</Filter>
+    </ClInclude>
+    <ClInclude Include="Net\HvNetManager.h">
+      <Filter>Net</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

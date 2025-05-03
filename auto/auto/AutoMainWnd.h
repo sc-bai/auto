@@ -54,7 +54,7 @@ private:
     void InitContentList();	// 内容
 
     void SetCurrentItemBackColor(int index);
-    std::string GetTTSBuildFile(ContentListItem& item);
+    std::vector<std::string> GetTTSBuildFile(ContentListItem& item);
     std::string BuildTTSText(ContentListItem& item);
     void GetCurrentVoiceType();
 
@@ -105,7 +105,7 @@ private:
     QStringList ini_list_;
     uint64_t ini_index_ = 0;
 
-    voice_type m_voice_type = voice_type::type_unkown;
+    std::vector<std::string> tts_voice_params_; // 一次性合成多个音色语音
 
     std::thread m_work_thread;
     std::atomic<bool> m_thread_running_ = false;

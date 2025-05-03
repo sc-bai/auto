@@ -62,33 +62,32 @@ int TTSHelper::init()
 	return ret;
 }
 
+int TTSHelper::do_tts(std::string strText, std::vector<std::string> strBuildFilePath, std::vector<std::string> voice_params)
+{
+	if (strBuildFilePath.size() != voice_params.size() || strBuildFilePath.empty()|| voice_params.empty()) {
+		return -1;
+	}
+	int ret = -1;
+	for (int i=0;i<strBuildFilePath.size();i++)
+	{
+		ret = do_tts_once(strText, strBuildFilePath[i], voice_params[i]);
+		if (ret == -1) {
+			printf("合成失败");
+		}
+	}
+	return 0;
+}
+
 /*
 	返回0 成功
 */
-int TTSHelper::do_tts(std::string strText, std::string strBuildFilePath, voice_type type)
+int TTSHelper::do_tts_once(std::string strText, std::string strBuildFilePath, std::string voice_params)
 {
 	const char* src_text = strText.c_str();
 	const char* des_path = strBuildFilePath.c_str();
 
 	char param[1024] = { 0 };
-	switch (type)
-	{
-	case type_xiaoshan:
-		sprintf_s(param, "voice_name = x4_lingxiaoshan_profnews, text_encoding = gb2312, sample_rate = 16000, speed = 50, volume = 50, pitch = 50, rdn = 0");
-		break;
-	case type_chaoge:
-		sprintf_s(param, "voice_name = x4_chaoge, text_encoding = gb2312, sample_rate = 16000, speed = 50, volume = 50, pitch = 50, rdn = 0");
-		break;
-	case type_guli:
-		sprintf_s(param, "voice_name = x2_ugsp_dilare, text_encoding = gb2312, sample_rate = 16000, speed = 50, volume = 50, pitch = 50, rdn = 0");
-		break;
-	case type_dawa:
-		sprintf_s(param, "voice_name = x2_BoCn_YangJin, text_encoding = gb2312, sample_rate = 16000, speed = 50, volume = 50, pitch = 50, rdn = 0");
-		break;
-	default:
-		return -1;
-	}
-
+	sprintf_s(param, "voice_name = %s, text_encoding = gb2312, sample_rate = 16000, speed = 50, volume = 50, pitch = 50, rdn = 0", voice_params.c_str());
 	int  ret = -1;
 	FILE* fp = NULL;
 	const char* sessionID = NULL;
