@@ -1,15 +1,19 @@
+
 #include <QMenu>
 #include <QAction>
 #include <iosfwd>
-#include <io.h>
 #include <fstream>
-#include "AutoMainWnd.h"
+#include <QSettings>
+#include <QFile>
+#include <QTextStream>
+#include <QDebug>
+#include <QSettings>
+
+#include <io.h>
 #include "Tools/wavhelper.h"
 #include "Tools/rechelper.h"
 #include "TTSHelper.h"
-#include <QSettings>
-#include <QDebug>
-#include <QFile>
+#include "AutoMainWnd.h"
 
 AutoMainWnd::AutoMainWnd(QWidget *parent)
     : QMainWindow(parent)
@@ -233,6 +237,7 @@ void AutoMainWnd::on_btn_save_clicked()
             build_file_names = GetTTSBuildFile(m_vCtxTextList[i]);
             build_text = BuildTTSText(m_vCtxTextList[i]);
             TTSHelper::instance()->do_tts(build_text, build_file_names, tts_voice_params_);
+            break;
         }
         RECHelper::Instance()->ModifyRecFileAll(m_vCtxIndexList);
         emit signal_finish();
@@ -627,10 +632,6 @@ void AutoMainWnd::InitTraySys()
 /*
     自动打开
 */
-
-#include <QFile>
-#include <QTextStream>
-#include <QDebug>
 void AutoMainWnd::AutoOpenIniFile()
 {
     auto inifile = PathHelper::Instance()->GetCurrentDir() + L"auto2.0.ini";
@@ -1062,7 +1063,7 @@ CLineComboxComplete* AutoMainWnd::BuilderItem(ModifyType type)
 }
 
 
-#include <QSettings>
+
 void AutoMainWnd::ShowContentList()
 {
     CLineComboxComplete* pItem = nullptr;

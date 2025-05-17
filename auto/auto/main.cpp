@@ -1,8 +1,9 @@
-#include "AutoMainWnd.h"
+
 #include <QtWidgets/QApplication>
 #include "Tools/rechelper.h"
 #include <QTextCodec>
 #include "TTSHelper.h"
+#include "AutoMainWnd.h"
 
 void ModifyDateRec()
 {

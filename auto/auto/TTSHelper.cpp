@@ -1,6 +1,7 @@
 #include "TTSHelper.h"
 #include <stdlib.h>
 #include <stdio.h>
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <conio.h>
 #include <errno.h>
@@ -8,6 +9,8 @@
 #include "include/qtts.h"
 #include "include/msp_cmn.h"
 #include "include/msp_errors.h"
+#include "Net/HvNetManager.h"
+#include "Net/HvWebsocketManager.h"
  
 /* 默认wav音频头部数据 */
 wave_pcm_hdr default_wav_hdr =
@@ -70,7 +73,7 @@ int TTSHelper::do_tts(std::string strText, std::vector<std::string> strBuildFile
 	int ret = -1;
 	for (int i=0;i<strBuildFilePath.size();i++)
 	{
-		ret = do_tts_once(strText, strBuildFilePath[i], voice_params[i]);
+		ret = do_tts_once_http(strText, strBuildFilePath[i], voice_params[i]);
 		if (ret == -1) {
 			printf("合成失败");
 		}
@@ -165,6 +168,23 @@ int TTSHelper::do_tts_once(std::string strText, std::string strBuildFilePath, st
 	}
 
 	return ret;
+}
+
+#include <QDebug>
+// http
+int TTSHelper::do_tts_once_http(std::string strText, std::string strBuildFilePath, std::string voice_params)
+{
+	/*std::string url = HvNetManager::instance()->assemble_auth_url("wss://tts-api.xfyun.cn/v2/tts", "53964d67bd0a5dfa0ccd9a0c69f540a2", "NTA3YTUwZThkMzk4YTk4YzQwMTY2ZGNk");
+
+	std::string respon;
+	HvNetManager::instance()->HttpRequestionSync(url, "", respon);
+	qDebug() << "respon:" << respon.c_str();
+	return 0;
+	*/
+
+	HVWebSocket::instance()->sendMsg(strText);
+
+	return 0;
 }
 
 void TTSHelper::uninit()

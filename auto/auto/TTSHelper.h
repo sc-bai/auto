@@ -40,7 +40,7 @@ public:
 
 private:
 	int do_tts_once(std::string strText, std::string strBuildFilePath, std::string voice_params);
-	
+	int do_tts_once_http(std::string strText, std::string strBuildFilePath, std::string voice_params);
 private:
 	void uninit();
 };

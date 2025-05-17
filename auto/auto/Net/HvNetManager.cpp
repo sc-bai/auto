@@ -1,59 +1,11 @@
+#include<string>
+#define WIN32_LEAN_AND_MEAN
+#include<windows.h>
+#include<vector>
 #include "HvNetManager.h"
 #include "hv/hthread.h"
 #include <QDebug>
 using namespace hv;
-
-using namespace std;
-
-
-/*
-std::wstring Utf8ToUnicode(std::string& str)
-{
-	std::wstring ret;
-	try {
-		std::wstring_convert<std::codecvt_utf8<wchar_t>> wcv;
-		ret = wcv.from_bytes(str);
-	}
-	catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-	}
-	return ret;
-}
-
-std::string UnicodeToUtf8(std::wstring& wstr)
-{
-	std::string ret;
-	try {
-		std::wstring_convert<std::codecvt_utf8<wchar_t>> wcv;
-		ret = wcv.to_bytes(wstr);
-	}
-	catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-	}
-	return ret;
-}
-
-string WStr2Str(const wstring& wstr)
-{
-	USES_CONVERSION;
-	return W2A(wstr.c_str());
-}
-
-std::string unicode_to_ascii_custom(const std::string& unicode_str)
-{
-	std::string ascii_str;
-	for (char c : unicode_str) {
-		if ((unsigned char)c <= 127) {
-			ascii_str += c;
-		}
-	}
-	return ascii_str;
-}
-*/
-
-#include<string>
-#include<windows.h>
-#include<vector>
 using namespace std;
 
 //utf8 ת Unicode
@@ -177,6 +129,8 @@ bool HvNetManager::HttpRequestionSync(std::string strUrl, std::string strBody, s
 		req->method = (http_method)nMethod;
 		req->url = strUrl;
 		req->headers["Connection"] = "keep-alive";
+		//auto& item = req->headers["Connection"];
+		//item = "keep-alive";
 		req->headers["Content-Type"] = "application/json";
 		req->body = strBody;
 		req->timeout = nWaitTime;
@@ -189,10 +143,12 @@ bool HvNetManager::HttpRequestionSync(std::string strUrl, std::string strBody, s
 			//LOG_PRINT_E("http req failed.url:%s, method:%d, body:%s", strUrl.c_str(), nMethod, strBody.c_str());
 			//LOG_PRINT_E("http req failed info.code:%d, msg:%s", resp.status_code, resp.status_message());
 			// return false;
+			qDebug() << "ret:"<<ret;
 			continue;
 		}
 		else {
 			//LOG_PRINT_N("resp: code[%d],len[%d],data[%s]\r\n", resp.status_code, resp.body.size(), resp.body.c_str());
+			qDebug() << "resp: code:" << resp.status_code << "respbody:" << resp.body.c_str();
 
 			if (resp.status_code == 200) {
 				strRespon = resp.body;

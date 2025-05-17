@@ -73,6 +73,12 @@
     <ClCompile Include="Net\HvNetManager.cpp">
       <Filter>Net</Filter>
     </ClCompile>
+    <ClCompile Include="Tools\CodeTool.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Net\HvWebsocketManager.cpp">
+      <Filter>Net</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Tools\PathHelper.h">
@@ -100,6 +106,12 @@
       <Filter>tts</Filter>
     </ClInclude>
     <ClInclude Include="Net\HvNetManager.h">
+      <Filter>Net</Filter>
+    </ClInclude>
+    <ClInclude Include="CodeTool.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Net\HvWebsocketManager.h">
       <Filter>Net</Filter>
     </ClInclude>
   </ItemGroup>

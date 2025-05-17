@@ -1,5 +1,5 @@
 #pragma once
-
+#include "stdafx.h"
 class RECHelper {
 public:
 	static RECHelper* Instance(){
