@@ -182,7 +182,7 @@ int TTSHelper::do_tts_once_http(std::string strText, std::string strBuildFilePat
 	return 0;
 	*/
 
-	HVWebSocket::instance()->sendMsg(strText);
+	HVWebSocket::instance()->sendMsg(strText, strBuildFilePath, voice_params);
 
 	return 0;
 }

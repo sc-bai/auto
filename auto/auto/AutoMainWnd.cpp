@@ -175,7 +175,7 @@ std::string AutoMainWnd::BuildTTSText(ContentListItem& item)
 		strText.append(item.strPrecipitation);
     }
     qDebug() << "tts build text:" << strText;
-    return tool::CodeHelper::WStr2Str(strText);
+    return tool::CodeHelper::UnicodeToUtf8(strText);
 }
 
 void readFileLineByLine(const QString& filePath, std::vector<std::string> &lines) {
@@ -221,7 +221,8 @@ void AutoMainWnd::on_btn_save_clicked()
         return;
     }
     ui.btn_save->setEnabled(false);
-    m_work_thread = std::thread([&]() {
+    //m_work_thread = std::thread([&]() 
+        {
         qDebug() << ",thread_id:" << ::GetCurrentThreadId();
 
         m_thread_running_.store(true);
@@ -244,8 +245,9 @@ void AutoMainWnd::on_btn_save_clicked()
         m_thread_running_.store(false);
         return;
         
-        });
-    m_work_thread.detach();
+        }
+        //);
+   // m_work_thread.detach();
     return;
 }
 

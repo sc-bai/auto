@@ -113,7 +113,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
@@ -140,7 +140,7 @@
   <ItemGroup>
     <ClInclude Include="CodeTool.h" />
     <ClInclude Include="Net\HvNetManager.h" />
-    <ClInclude Include="Net\HvWebsocketManager.h" />
+    <QtMoc Include="Net\HvWebsocketManager.h" />
     <ClInclude Include="TTSHelper.h" />
     <QtMoc Include="CLineComboxComplete.h" />
     <ClInclude Include="resource.h" />
