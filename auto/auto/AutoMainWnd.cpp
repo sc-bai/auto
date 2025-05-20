@@ -246,8 +246,8 @@ void AutoMainWnd::on_btn_save_clicked()
         return;
         
         }
-        //);
-   // m_work_thread.detach();
+       // );
+  // m_work_thread.detach();
     return;
 }
 
