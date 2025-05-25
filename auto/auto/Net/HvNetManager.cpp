@@ -118,20 +118,74 @@ std::string ASCII2UTF_8(std::string& strAsciiCode)
 }
 
 /*
+	文本翻译成其他语言
+	中文(简体)	cn	  x4_lingxiaoshan_profnews  x4_chaoge
+	维吾尔语	uy   x2_ugsp_dilare
+	藏语	ti  x2_BoCn_YangJin
+*/
+bool HvNetManager::TransText(std::string strFrom, std::string to, std::string strSrcText, std::string& strDesText)
+{
+	HttpReqBody req;
+	req.common.app_id = "205250fa";
+	req.business.from = strFrom;
+	req.business.to = to;
+	//req.data.text = strSrcText;
+	req.data.text = CodeTool::EncodeBase64((unsigned char*)strSrcText.c_str(), strSrcText.size());
+
+	nlohmann::json j = req;
+	std::string str_json_body = j.dump();
+
+	// Generate RFC1123 formatted date
+	std::string date_buf = get_rfc1123_time();
+
+	qDebug() << "data_buf-1:" << date_buf.c_str();
+	std::string signature = build_signature("https://ntrans.xfyun.cn/v2/ots", str_json_body, "53964d67bd0a5dfa0ccd9a0c69f540a2", "NTA3YTUwZThkMzk4YTk4YzQwMTY2ZGNk", date_buf);
+
+	std::string respon;
+	bool bret = HttpRequestionSync("https://ntrans.xfyun.cn/v2/ots", str_json_body, signature, date_buf, respon, HTTP_METHOD::http_post);
+
+	if (bret) {
+		nlohmann::json parsed = nlohmann::json::parse(respon);
+		HttpResp resp = parsed.get<HttpResp>();
+		if (resp.code == 0) {
+			strDesText = resp.data.result.trans_result.dst;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/*
 	同步请求http服务
 	nMethod 0delete 1：get 3:post
 */
-bool HvNetManager::HttpRequestionSync(std::string strUrl, std::string strBody, std::string& strRespon, HTTP_METHOD nMethod, int nWaitTime /*= 5*/)
+bool HvNetManager::HttpRequestionSync(std::string strUrl, std::string strBody,std::string Authorization, std::string& strDate, std::string& strRespon, HTTP_METHOD nMethod, int nWaitTime /*= 5*/)
 {
-	for (int i=0;i<2;i++)
+	for (int i=0;i<1;i++)
 	{
 		std::shared_ptr<HttpRequest> req = std::make_shared<HttpRequest>();
 		req->method = (http_method)nMethod;
 		req->url = strUrl;
-		req->headers["Connection"] = "keep-alive";
-		//auto& item = req->headers["Connection"];
-		//item = "keep-alive";
+		req->headers["Accept"] = "application/json,version=1.0";
 		req->headers["Content-Type"] = "application/json";
+		req->headers["Date"] = strDate;
+
+		std::string strDigest = sha256(strBody);
+		strDigest = CodeTool::EncodeBase64((unsigned char*)strDigest.c_str(), strDigest.size());
+		req->headers["Digest"] = "SHA-256=" +strDigest;
+		req->headers["Authorization"] = Authorization;
+
+
+		// Parse URL components(simplified parsing)
+		size_t protocol_end = strUrl.find("://");
+		size_t host_start = protocol_end != string::npos ? protocol_end + 3 : 0;
+		size_t path_start = strUrl.find('/', host_start);
+
+		string host = strUrl.substr(host_start, path_start - host_start);
+		string path = path_start != string::npos ? strUrl.substr(path_start) : "/";
+		req->headers["Host"] = host;
+
 		req->body = strBody;
 		req->timeout = nWaitTime;
 
@@ -140,14 +194,10 @@ bool HvNetManager::HttpRequestionSync(std::string strUrl, std::string strBody, s
 		HttpClient sync_client;
 		int ret = sync_client.send(req.get(), &resp);
 		if (ret != 0) {
-			//LOG_PRINT_E("http req failed.url:%s, method:%d, body:%s", strUrl.c_str(), nMethod, strBody.c_str());
-			//LOG_PRINT_E("http req failed info.code:%d, msg:%s", resp.status_code, resp.status_message());
-			// return false;
 			qDebug() << "ret:"<<ret;
 			continue;
 		}
 		else {
-			//LOG_PRINT_N("resp: code[%d],len[%d],data[%s]\r\n", resp.status_code, resp.body.size(), resp.body.c_str());
 			qDebug() << "resp: code:" << resp.status_code << "respbody:" << resp.body.c_str();
 
 			if (resp.status_code == 200) {

@@ -4,18 +4,16 @@
 #include <map>
 #include <iomanip>
 #include <string>
-
+#include <QDebug>
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
-#include <Tools/CodeTool.h>
+#include <openssl/sha.h>
 
-#include "hv/WebSocketClient.h"
-#include "hv/WebSocketChannel.h"
-#include "hv/requests.h"
-#include "hv/axios.h"
 #include "Tools/CodeTool.h"
+#include "hv/json.hpp"
+#include "hv/HttpClient.h"
 
 using namespace hv;
 using namespace std;
@@ -28,6 +26,57 @@ enum class HTTP_METHOD {
 	http_post = 3,
 };
 
+struct HttpReqCommon {
+	std::string app_id;
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpReqCommon, app_id)
+};
+
+struct HttpReqBusiness {
+	std::string from;
+	std::string to;
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpReqBusiness, from,to)
+};
+
+struct HttpReqData {
+	std::string text;
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpReqData, text)
+};
+
+struct HttpReqBody {
+	HttpReqCommon common;
+	HttpReqBusiness business;
+	HttpReqData data;
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpReqBody, common, business, data)
+};
+
+
+struct HttpRespDataResultTransResult {
+	std::string dst;
+	std::string src;
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpRespDataResultTransResult, dst, src)
+};
+
+struct HttpRespDataResult {
+	std::string from;
+	std::string to;
+	HttpRespDataResultTransResult trans_result;
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpRespDataResult, from, to, trans_result)
+};
+
+struct HttpRespData {
+	HttpRespDataResult result;
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpRespData, result)
+};
+
+struct HttpResp {
+	int code;
+	std::string message;
+	std::string sid;
+	HttpRespData data;
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(HttpResp, code, message, sid, data)
+};
+
+
 class HvNetManager
 {
 public:
@@ -36,16 +85,17 @@ public:
 		return &h;
 	}
 	
-public:
+	bool TransText(std::string strFrom, std::string to, std::string strSrcText, std::string& strDesText);
+	private:
 	/*
 		Õ¨≤Ω«Î«Û
 	*/
-	bool HttpRequestionSync(std::string strUrl, std::string strBody, std::string& strRespon, HTTP_METHOD nMethod = HTTP_METHOD::http_get, int nWaitTime = 5);
+	bool HttpRequestionSync(std::string hosturl, std::string strBody, std::string Authorization, std::string& strDate, std::string& strRespon, HTTP_METHOD nMethod = HTTP_METHOD::http_get, int nWaitTime = 5);
 
-	std::string assemble_auth_url(const std::string& hosturl,
-		const std::string& api_key,
-		const std::string& api_secret) {
-		// Parse URL components (simplified parsing)
+	std::string build_signature(const std::string hosturl, const std::string reqJson, const std::string& api_key,
+		const std::string& api_secret, std::string& date_buf) {
+	
+		// Parse URL components(simplified parsing)
 		size_t protocol_end = hosturl.find("://");
 		size_t host_start = protocol_end != string::npos ? protocol_end + 3 : 0;
 		size_t path_start = hosturl.find('/', host_start);
@@ -53,14 +103,16 @@ public:
 		string host = hosturl.substr(host_start, path_start - host_start);
 		string path = path_start != string::npos ? hosturl.substr(path_start) : "/";
 
-		// Generate RFC1123 formatted date
-		std::string date_buf = get_rfc1123_time();
+		
+		std::string strDigest = sha256(reqJson);
+		strDigest = CodeTool::EncodeBase64((unsigned char*)strDigest.c_str(), strDigest.size());
 
 		// Build signature string
 		vector<string> sign_parts = {
 			"host: " + host,
 			"date: " + string(date_buf),
-			"GET " + path + " HTTP/1.1"
+			"POST " + path + " HTTP/1.1",
+			"digest: SHA-256=" + strDigest
 		};
 		string sign_string;
 		for (const auto& part : sign_parts) {
@@ -76,33 +128,10 @@ public:
 		// Build authorization header
 		string auth_params = "api_key=\"" + api_key +
 			"\", algorithm=\"hmac-sha256\""
-			", headers=\"host date request-line\""
+			", headers=\"host date request-line digest\""
 			", signature=\"" + signature + "\"";
-		string authorization = CodeTool::EncodeBase64((unsigned char*)auth_params.c_str(), auth_params.size());
-
-		// Build query parameters
-		std::vector<std::pair<string, string>> params = {
-			{"host", host},
-			{"date", date_buf},
-			{"authorization", authorization}
-		};
-
-		// Build final URL
-		string query;
-		/*
-		for (const auto& [key, value] : params) {
-			if (!query.empty()) query += "&";
-			query += url_encode(key) + "=" + url_encode(value);
-		}
-		*/
-		for (auto& item : params) {
-			std::string key = item.first;
-			std::string value = item.second;
-			if (!query.empty()) query += "&";
-			query += url_encode(key) + "=" + url_encode(value);
-		}
-
-		return hosturl + "?" + query;
+			
+		return auth_params;
 	}
 private:
 	std::string get_rfc1123_time() {
@@ -143,7 +172,23 @@ private:
 		return CodeTool::EncodeBase64(digest, len);
 	}
 
-	
+	std::string sha256(const std::string& str) {
+		unsigned char hash[SHA256_DIGEST_LENGTH];
+		EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
+
+		EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL);
+		EVP_DigestUpdate(mdctx, str.c_str(), str.size());
+		EVP_DigestFinal_ex(mdctx, hash, NULL);
+		EVP_MD_CTX_free(mdctx);
+
+		std::string output;
+		for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+			char buf[3];
+			sprintf(buf, "%02x", hash[i]);
+			output += buf;
+		}
+		return output;
+	}
 
 
 	

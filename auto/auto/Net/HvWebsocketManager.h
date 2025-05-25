@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <string>
 #include <QObject>
+#include <QEventLoop>
 
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
@@ -24,6 +25,10 @@ using namespace std;
 #include "hv/hthread.h" // import hv_gettid
 
 #include "hv/json.hpp"
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
+
 
 
 struct WebSocketReqComm {
@@ -36,6 +41,7 @@ struct WebSocketReqBusiness {
 	std::string aue{"raw"};
 	std::string auf{"audio/L16;rate=16000"};
 	std::string vcn;
+	int sfl{0};
 	int speed{50};
 	int volume{50};
 	int pitch{50};
@@ -93,6 +99,7 @@ public:
 	//接收消息回调，用于将数据发送到界面
 	std::function<void(std::string)> m_pMsgCallBack;
 
+	void wait_condition();
 private slots:
 	void onConnectedSlotQt();
 	void onDisConnectSlotQt();
@@ -107,6 +114,8 @@ private:
 	std::string assemble_auth_url(const std::string& hosturl,
 		const std::string& api_key,
 		const std::string& api_secret);
+
+
 private:
 	std::string get_rfc1123_time() {
 		std::time_t now = std::time(nullptr);
@@ -148,8 +157,11 @@ private:
 
 	void write_pcm_to_wav_file(std::string wav_path, std::string& pcm_data);
 	
+	void write_pcm_to_wav_file_mp3(std::string wav_path, std::string& pcm_data);
 
 
+	void notify_condition_completed();
+	
 private:
 
 	QWebSocket* m_ClientSocket = nullptr;
@@ -167,4 +179,13 @@ private:
 
 	std::string m_full_wav_file_data;
 
+	std::mutex mtx_;
+	std::condition_variable cv_;
+	bool async_completed_ = false;
+	
+	WebSocketReq req_;
+
+	std::string build_file_path;
+
+	QEventLoop m_loop;
 };

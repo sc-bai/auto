@@ -73,6 +73,11 @@ int TTSHelper::do_tts(std::string strText, std::vector<std::string> strBuildFile
 	int ret = -1;
 	for (int i=0;i<strBuildFilePath.size();i++)
 	{
+		//std::string utf8_dst_text;
+		//if (HvNetManager::instance()->TransText("cn", "ti", strText, utf8_dst_text) == false) {
+		//	return -1;
+		//}
+
 		ret = do_tts_once_http(strText, strBuildFilePath[i], voice_params[i]);
 		if (ret == -1) {
 			printf("∫œ≥… ß∞‹");
@@ -181,9 +186,14 @@ int TTSHelper::do_tts_once_http(std::string strText, std::string strBuildFilePat
 	qDebug() << "respon:" << respon.c_str();
 	return 0;
 	*/
-
+	qDebug() << "text:" << strText.c_str();
+	HVWebSocket hs;
+	hs.sendMsg(strText, strBuildFilePath, voice_params);
+	hs.wait_condition();
+	/*
 	HVWebSocket::instance()->sendMsg(strText, strBuildFilePath, voice_params);
-
+	HVWebSocket::instance()->wait_condition();
+	*/
 	return 0;
 }
 

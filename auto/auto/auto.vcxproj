@@ -138,9 +138,9 @@
     <QtUic Include="TempWnd.ui" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CodeTool.h" />
     <ClInclude Include="Net\HvNetManager.h" />
     <QtMoc Include="Net\HvWebsocketManager.h" />
+    <ClInclude Include="Tools\CodeTool.h" />
     <ClInclude Include="TTSHelper.h" />
     <QtMoc Include="CLineComboxComplete.h" />
     <ClInclude Include="resource.h" />

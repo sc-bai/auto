@@ -21,7 +21,7 @@ bool tool::FileHelp::WriteIniKeyValue(std::wstring strFilePath, std::wstring str
 {
 	bool bRet = ::WritePrivateProfileString(strNode.c_str(), strKey.c_str(), strValue.c_str(), strFilePath.c_str());
 	if (!bRet) {
-		OutputDebugString(L"[weather]error-WriteIniKeyValue false\n");
+		//OutputDebugString(L"[weather]error-WriteIniKeyValue false\n");
 	}
 	return bRet;
 }

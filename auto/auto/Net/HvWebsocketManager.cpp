@@ -5,6 +5,9 @@
 #include "HvWebsocketManager.h"
 #include "hv/hthread.h"
 #include <QDebug>
+
+#include "Net/HvNetManager.h"
+
 using namespace hv;
 using namespace std;
 #include "TTSHelper.h"
@@ -40,6 +43,7 @@ HVWebSocket::HVWebSocket()
 	connect(m_ClientSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
 		[=](QAbstractSocket::SocketError error) {
 			qDebug() << error << ",error string:" << m_ClientSocket->errorString();
+			notify_condition_completed();
 		});
 	connect(m_ClientSocket, &QWebSocket::textMessageReceived, this, [&](const QString& msg) {
 		std::string strText = msg.toStdString();
@@ -56,7 +60,7 @@ HVWebSocket::HVWebSocket()
 	m_wc.onclose = std::bind(&HVWebSocket::onClose, this);
 #endif // USER_QWEBSOCKET
 		 
-	OpenWebSkt();
+	//OpenWebSkt();
 }
 
 HVWebSocket::~HVWebSocket()
@@ -66,40 +70,63 @@ HVWebSocket::~HVWebSocket()
 
 void HVWebSocket::sendMsg(const std::string Msg, std::string strBuildFilePath, std::string voice_params)
 {
+	std::string utf8_dst_text = Msg;
+	std::string to;
+
+	if (voice_params == "x2_ugsp_dilare") {
+		// 维吾尔语
+		to = "uy";
+	}
+	else if (voice_params == "x2_BoCn_YangJin") {
+		// 藏语
+		to = "ti";
+	}
+	else {
+		to = "cn";
+	}
+
+	// 不是转为中文的需要进行翻译处理
+	if (to != "cn") {
+		if (HvNetManager::instance()->TransText("cn", to, Msg, utf8_dst_text) == false) {
+			return;
+		}
+	}
+
+	build_file_path = strBuildFilePath;
+	
 	qDebug() << "send msg start:"<<QDateTime::currentDateTime().toString("hh:mm:ss");
 	if (bConnected == false) {
 		OpenWebSkt();
-		Sleep(4000);
 	}
-	if (bConnected) {
-		qDebug() << "send msg real-----" << QDateTime::currentDateTime().toString("hh:mm:ss");;
-
-		WebSocketReq req;
-		req.common.app_id = "205250fa";
-		req.business.vcn = voice_params;
-		req.data.text = CodeTool::EncodeBase64((unsigned char*)Msg.c_str(), Msg.size());
-
-		nlohmann::json j = req;
-		std::string req_json = j.dump(4);
-#ifdef USER_QWEBSOCKET
-		QString send_text = QString::fromStdString(req_json);
-		m_ClientSocket->sendTextMessage(send_text);
-#else
-		m_wc.send(req_json);
-#endif // USER_QWEBSOCKET
-	}
+	
+	//WebSocketReq req;
+	req_.common.app_id = "205250fa";
+	req_.business.vcn = voice_params;
+	req_.data.text = CodeTool::EncodeBase64((unsigned char*)utf8_dst_text.c_str(), utf8_dst_text.size());
 }
 
 void HVWebSocket::onConnectedSlotQt()
 {
 	qDebug() << "onConnectedSlot" << QDateTime::currentDateTime().toString("hh:mm:ss");;
 	bConnected = true;
+
+	nlohmann::json j = req_;
+	std::string req_json = j.dump(4);
+#ifdef USER_QWEBSOCKET
+	QString send_text = QString::fromStdString(req_json);
+	m_ClientSocket->sendTextMessage(send_text);
+#else
+	m_wc.send(req_json);
+#endif // USER_QWEBSOCKET
 }
 
 void HVWebSocket::onDisConnectSlotQt()
 {
 	qDebug() << "onDisConnectSlot";
 	bConnected = false;
+
+	notify_condition_completed();
+	
 }
 
 void HVWebSocket::OpenWebSkt()
@@ -130,6 +157,9 @@ void HVWebSocket::onMessage(const std::string& msg)
 		
 		if (resp.code != 0) {
 			qDebug() << "tts recv msg code = 0;";
+
+			notify_condition_completed();
+
 			return;
 		}
 		if (resp.data.audio.empty()) return;
@@ -138,12 +168,16 @@ void HVWebSocket::onMessage(const std::string& msg)
 
 		if (resp.data.status == 1) {
 			m_full_wav_file_data += CodeTool::DecodeBase64(resp.data.audio.c_str(), resp.data.audio.length());
+			qDebug() << "m_full_wav_file_data.size:" << m_full_wav_file_data.size();
 			return;
 		}
 		if (resp.data.status == 2) {
 			m_full_wav_file_data += CodeTool::DecodeBase64(resp.data.audio.c_str(), resp.data.audio.length());
+			qDebug() << "m_full_wav_file_data.size:" << m_full_wav_file_data.size();
 		}
-		write_pcm_to_wav_file("text.wav", m_full_wav_file_data);
+		write_pcm_to_wav_file(build_file_path, m_full_wav_file_data);
+		//write_pcm_to_wav_file_mp3("text.mp3", m_full_wav_file_data);
+		//write_pcm_to_wav_file_mp3("text.pcm", m_full_wav_file_data);
 		m_full_wav_file_data = "";
 #ifdef USER_QWEBSOCKET
 		m_ClientSocket->abort();
@@ -151,10 +185,11 @@ void HVWebSocket::onMessage(const std::string& msg)
 		m_wc.close();
 #endif // USER_QWEBSOCKET
 
+		notify_condition_completed();
 	}
 	catch (...)
 	{
-
+		notify_condition_completed();
 	}
 
 }
@@ -177,8 +212,6 @@ std::string HVWebSocket::assemble_auth_url(const std::string& hosturl, const std
 
 	// Generate RFC1123 formatted date
 	std::string date_buf = get_rfc1123_time();
-
-	//std::string date_buf = "Sun, 18 May 2025 14:33:57 GMT";
 
 	// Build signature string
 	vector<string> sign_parts = {
@@ -261,5 +294,38 @@ void HVWebSocket::write_pcm_to_wav_file(std::string wav_path, std::string& pcm_d
 	fclose(fp);
 	fp = NULL;
 	qDebug() << "write file over.";
+}
+
+void HVWebSocket::write_pcm_to_wav_file_mp3(std::string wav_path, std::string& pcm_data)
+{
+	if (wav_path.empty() || pcm_data.empty()) return;
+
+	const char* src_text = pcm_data.c_str();
+	const char* des_path = wav_path.c_str();
+
+	FILE* fp = NULL;
+	fp = fopen(des_path, "wb");
+	if (NULL == fp)
+	{
+		printf("open %s error.\n", des_path);
+		qDebug() << "open file error:" << des_path;
+		return;
+	}
+
+	fwrite(src_text, pcm_data.length(), 1, fp);
+	fclose(fp);
+	fp = NULL;
+	qDebug() << "write file over.";
+}
+
+
+void HVWebSocket::notify_condition_completed()
+{
+	m_loop.quit();
+}
+
+void HVWebSocket::wait_condition()
+{
+	m_loop.exec();
 }
 

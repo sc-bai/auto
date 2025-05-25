@@ -9,11 +9,14 @@
 #include <QDebug>
 #include <QSettings>
 
+#include "tools/CodeTool.h"
+
 #include <io.h>
 #include "Tools/wavhelper.h"
 #include "Tools/rechelper.h"
 #include "TTSHelper.h"
 #include "AutoMainWnd.h"
+
 
 AutoMainWnd::AutoMainWnd(QWidget *parent)
     : QMainWindow(parent)
@@ -221,24 +224,32 @@ void AutoMainWnd::on_btn_save_clicked()
         return;
     }
     ui.btn_save->setEnabled(false);
-    //m_work_thread = std::thread([&]() 
+    m_work_thread = std::thread([&]() 
         {
         qDebug() << ",thread_id:" << ::GetCurrentThreadId();
 
         m_thread_running_.store(true);
         std::vector<std::string> build_file_names;
         std::string build_text;
+        std::vector<ContentListItem> onceWavCat;
+
         for (size_t i = 0; i < m_vCtxIndexList.size(); i++)
         {
+            onceWavCat.clear();
+            onceWavCat.push_back(m_vCtxIndexList[i]);
             emit signal_start(i);
-            //WavHelper::Instance()->BuildWavWithOnceCall(m_vCtxIndexList);
+            WavHelper::Instance()->BuildWavWithOnceCall(onceWavCat);
             if(tts_voice_params_.empty())
                 continue;
 
             build_file_names = GetTTSBuildFile(m_vCtxTextList[i]);
             build_text = BuildTTSText(m_vCtxTextList[i]);
-            TTSHelper::instance()->do_tts(build_text, build_file_names, tts_voice_params_);
-            break;
+
+            TTSHelper th;
+            th.do_tts(build_text, build_file_names, tts_voice_params_);
+
+			//TTSHelper::instance()->do_tts(build_text, build_file_names, tts_voice_params_);
+            //break;
         }
         RECHelper::Instance()->ModifyRecFileAll(m_vCtxIndexList);
         emit signal_finish();
@@ -246,8 +257,8 @@ void AutoMainWnd::on_btn_save_clicked()
         return;
         
         }
-       // );
-  // m_work_thread.detach();
+       );
+    m_work_thread.detach();
     return;
 }
 

@@ -108,7 +108,7 @@
     <ClInclude Include="Net\HvNetManager.h">
       <Filter>Net</Filter>
     </ClInclude>
-    <ClInclude Include="CodeTool.h">
+    <ClInclude Include="Tools\CodeTool.h">
       <Filter>Tools</Filter>
     </ClInclude>
   </ItemGroup>
