@@ -42,6 +42,9 @@ TTSHelper::~TTSHelper()
 
 int TTSHelper::init()
 {
+	return 0;
+
+	/*
 	int         ret = MSP_SUCCESS;
 	const char* login_params = "appid = 205250fa, work_dir = .";//登录参数,appid与msc库绑定,请勿随意改动
 	/*
@@ -54,8 +57,8 @@ int TTSHelper::init()
 	* text_encoding: 合成文本编码格式
 	*
 	*/
-	
-	/* 用户登录 */
+	/*
+	// 用户登录 
 	ret = MSPLogin(NULL, NULL, login_params);
 	if (MSP_SUCCESS != ret)
 	{
@@ -63,6 +66,7 @@ int TTSHelper::init()
 		return ret;
 	}
 	return ret;
+	*/
 }
 
 int TTSHelper::do_tts(std::string strText, std::vector<std::string> strBuildFilePath, std::vector<std::string> voice_params)
@@ -73,11 +77,6 @@ int TTSHelper::do_tts(std::string strText, std::vector<std::string> strBuildFile
 	int ret = -1;
 	for (int i=0;i<strBuildFilePath.size();i++)
 	{
-		//std::string utf8_dst_text;
-		//if (HvNetManager::instance()->TransText("cn", "ti", strText, utf8_dst_text) == false) {
-		//	return -1;
-		//}
-
 		ret = do_tts_once_http(strText, strBuildFilePath[i], voice_params[i]);
 		if (ret == -1) {
 			printf("合成失败");
@@ -91,6 +90,7 @@ int TTSHelper::do_tts(std::string strText, std::vector<std::string> strBuildFile
 */
 int TTSHelper::do_tts_once(std::string strText, std::string strBuildFilePath, std::string voice_params)
 {
+	/*
 	const char* src_text = strText.c_str();
 	const char* des_path = strBuildFilePath.c_str();
 
@@ -113,7 +113,7 @@ int TTSHelper::do_tts_once(std::string strText, std::string strBuildFilePath, st
 		printf("open %s error.\n", des_path);
 		return ret;
 	}
-	/* 开始合成 */
+	// 开始合成 
 	sessionID = QTTSSessionBegin(param, &ret);
 	if (MSP_SUCCESS != ret)
 	{
@@ -133,7 +133,7 @@ int TTSHelper::do_tts_once(std::string strText, std::string strBuildFilePath, st
 	fwrite(&wav_hdr, sizeof(wav_hdr), 1, fp); //添加wav音频头，使用采样率为16000
 	while (1)
 	{
-		/* 获取合成音频 */
+		// 获取合成音频 
 		const void* data = QTTSAudioGet(sessionID, &audio_len, &synth_status, &ret);
 		if (MSP_SUCCESS != ret)
 			break;
@@ -155,17 +155,17 @@ int TTSHelper::do_tts_once(std::string strText, std::string strBuildFilePath, st
 		fclose(fp);
 		return ret;
 	}
-	/* 修正wav文件头数据的大小 */
+	// 修正wav文件头数据的大小 
 	wav_hdr.size_8 += wav_hdr.data_size + (sizeof(wav_hdr) - 8);
 
-	/* 将修正过的数据写回文件头部,音频文件为wav格式 */
+	// 将修正过的数据写回文件头部,音频文件为wav格式 
 	fseek(fp, 4, 0);
 	fwrite(&wav_hdr.size_8, sizeof(wav_hdr.size_8), 1, fp); //写入size_8的值
 	fseek(fp, 40, 0); //将文件指针偏移到存储data_size值的位置
 	fwrite(&wav_hdr.data_size, sizeof(wav_hdr.data_size), 1, fp); //写入data_size的值
 	fclose(fp);
 	fp = NULL;
-	/* 合成完毕 */
+	// 合成完毕 
 	ret = QTTSSessionEnd(sessionID, "Normal");
 	if (MSP_SUCCESS != ret)
 	{
@@ -173,6 +173,8 @@ int TTSHelper::do_tts_once(std::string strText, std::string strBuildFilePath, st
 	}
 
 	return ret;
+	*/
+	return 0;
 }
 
 #include <QDebug>
@@ -199,5 +201,5 @@ int TTSHelper::do_tts_once_http(std::string strText, std::string strBuildFilePat
 
 void TTSHelper::uninit()
 {
-	MSPLogout(); //退出登录
+	//MSPLogout(); //退出登录
 }

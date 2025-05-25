@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 	QTextCodec::setCodecForLocale(codec);
 	//HVWebSocket::instance();
 
-	TTSHelper::instance()->init();
+	//TTSHelper::instance()->init();
     ModifyDateRec();
 
     AutoMainWnd w;

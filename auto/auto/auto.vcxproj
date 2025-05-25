@@ -75,7 +75,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>../third/tts/libs;../third/libhv/lib/debug;%(AdditionalLibraryDirectories);../third/openssl/lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>msc.lib;hv.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>hv.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -87,7 +87,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>../third/tts/libs;../third/libhv/lib/release;%(AdditionalLibraryDirectories);../third/openssl/lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>msc.lib;hv.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>hv.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'" Label="Configuration">
