@@ -231,7 +231,7 @@ void CItemInit::AppInit()
 	g_scWindLv.push_back(L"78级");
 	g_scWindLv.push_back(L"89级");
 	g_scWindLv.push_back(L"910级");
-	g_scWindLv.push_back(L"1011");
+	g_scWindLv.push_back(L"1011级");
 	g_scWindLv.push_back(L"1级");
 	g_scWindLv.push_back(L"2级");
 	g_scWindLv.push_back(L"3级");

@@ -410,7 +410,7 @@ std::vector<std::wstring> WavHelper::GetWavFilesFromIndex(ContentListItem& item)
 	buildvec.push_back(m_strWavDir + strTmp);
 
 	// feat : 每个语音后面新增这个语音 250429
-	buildvec.push_back(L"kk0030.wav");
+	buildvec.push_back(m_strWavDir + L"kk0030.wav");
 
 	bRet = true;
 exit:
@@ -442,7 +442,7 @@ exit:
 			OutputDebugString(itemfile.c_str());
 			OutputDebugString(L"\n");
 
-			MessageBox(nullptr, L"提示", std::wstring(itemfile + L"不存在").c_str(), MB_OK);
+			MessageBox(nullptr, std::wstring(itemfile + L"不存在").c_str(), L"提示",  MB_OK);
 			return false;
 		}
 	}

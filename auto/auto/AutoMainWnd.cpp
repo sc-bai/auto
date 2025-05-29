@@ -125,6 +125,19 @@ std::vector<std::string> AutoMainWnd::GetTTSBuildFile(ContentListItem& item)
     return ret;
 }
 
+
+std::wstring ReplaceAll(std::wstring str,
+	const std::wstring& from,
+	const std::wstring& to) {
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::wstring::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length();
+	}
+    return str;
+}
+
+
 /*
     根据一行内容生成要tts组成的语音
 */
@@ -150,6 +163,13 @@ std::string AutoMainWnd::BuildTTSText(ContentListItem& item)
 		strText.append(L",最高温度");
 		strText.append(item.strTempEx);
 	}
+    else {
+		strText.append(L",");
+		strText.append(item.strTemp);
+		strText.append(L"到");
+		strText.append(item.strTempEx);
+    }
+
 
     if (item.strWind == item.strWindEx) {
         strText.append(L",");
@@ -162,21 +182,54 @@ std::string AutoMainWnd::BuildTTSText(ContentListItem& item)
         strText.append(item.strWindEx);
     }
 
+    auto cover = [](std::wstring strText) {
+        std::wstring ret = ReplaceAll(strText, L"11", L"十一");
+        ret = ReplaceAll(ret, L"10", L"十");
+        ret = ReplaceAll(ret, L"9", L"九");
+        ret = ReplaceAll(ret, L"8", L"八");
+        ret = ReplaceAll(ret, L"7", L"七");
+        ret = ReplaceAll(ret, L"6", L"六");
+        ret = ReplaceAll(ret, L"5", L"五");
+        ret = ReplaceAll(ret, L"4", L"四");
+        ret = ReplaceAll(ret, L"3", L"三");
+        ret = ReplaceAll(ret, L"2", L"二");
+        ret = ReplaceAll(ret, L"1", L"一");
+        return ret;
+    };
+
     if (item.strWindLv == item.strWindLvEx) {
-		strText.append(L",");
-		strText.append(item.strWindLv);
+        if (item.strWindLv != L"空") {
+			strText.append(L",");
+			strText.append(cover(item.strWindLv));
+        }
     }
     else {
-		strText.append(L",");
-		strText.append(item.strWindLv);
-		strText.append(L"到");
-		strText.append(item.strWindLvEx);
+        if (item.strWindLv != L"空" && item.strWindLvEx != L"空") {
+			strText.append(L",");
+			//strText.append(item.strWindLv);
+            strText.append(cover(item.strWindLv));
+
+			strText.append(L"到");
+			//strText.append(item.strWindLvEx);
+            strText.append(cover(item.strWindLvEx));
+        }
+        else if (item.strWindLv == L"空" && item.strWindLvEx != L"空") {
+            strText.append(L",");
+            //strText.append(item.strWindLvEx);
+            strText.append(cover(item.strWindLvEx));
+        }
+		else if (item.strWindLv != L"空" && item.strWindLvEx == L"空") {
+			strText.append(L",");
+			//strText.append(item.strWindLv);
+            strText.append(cover(item.strWindLv));
+		}
     }
 
     if (item.strPrecipitation != L"0%") {
 		strText.append(L",降水概率");
 		strText.append(item.strPrecipitation);
     }
+    strText += L"[p300]";
     qDebug() << "tts build text:" << strText;
     return tool::CodeHelper::UnicodeToUtf8(strText);
 }
