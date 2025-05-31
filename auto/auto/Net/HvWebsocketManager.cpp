@@ -177,7 +177,7 @@ void HVWebSocket::onMessage(const std::string& msg)
 			m_full_wav_file_data += CodeTool::DecodeBase64(resp.data.audio.c_str(), resp.data.audio.length());
 			qDebug() << "m_full_wav_file_data.size:" << m_full_wav_file_data.size();
 		}
-		write_pcm_to_wav_file(build_file_path, m_full_wav_file_data);
+		write_pcm_to_wav_file_ex(build_file_path, m_full_wav_file_data);
 		//write_pcm_to_wav_file_mp3("text.mp3", m_full_wav_file_data);
 		//write_pcm_to_wav_file_mp3("text.pcm", m_full_wav_file_data);
 		m_full_wav_file_data = "";
@@ -296,6 +296,70 @@ void HVWebSocket::write_pcm_to_wav_file(std::string wav_path, std::string& pcm_d
 	fclose(fp);
 	fp = NULL;
 	qDebug() << "write file over.";
+}
+
+/*
+	双声道文件
+*/
+void HVWebSocket::write_pcm_to_wav_file_ex(std::string wav_path, std::string& pcm_data) {
+	if (wav_path.empty() || pcm_data.empty()) return;
+
+	// 双声道WAV头部配置
+	wave_pcm_hdr wav_hdr = {
+		{ 'R', 'I', 'F', 'F' },
+		0,
+		{'W', 'A', 'V', 'E'},
+		{'f', 'm', 't', ' '},
+		16,
+		1,
+		2,  // 双声道
+		16000,
+		64000,  // 16000*16*2/8 = 64000
+		4,  // 16*2/8 = 4
+		16,
+		{'d', 'a', 't', 'a'},
+		0
+	};
+
+	FILE* fp = fopen(wav_path.c_str(), "wb");
+	if (!fp) {
+		qDebug() << "open file error:" << wav_path.c_str();
+		return;
+	}
+
+	// 写入初始头部
+	fwrite(&wav_hdr, sizeof(wav_hdr), 1, fp);
+
+	// 将单声道PCM转换为双声道（复制每个样本）
+	std::vector<char> stereo_data;
+	stereo_data.reserve(pcm_data.size() * 2); // 双声道数据量是单声道的两倍
+
+	// 假设PCM数据是16位采样（2字节）
+	for (size_t i = 0; i < pcm_data.size(); i += 2) {
+		// 复制左声道
+		stereo_data.push_back(pcm_data[i]);
+		stereo_data.push_back(pcm_data[i + 1]);
+
+		// 复制相同数据作为右声道（创建双声道）
+		stereo_data.push_back(pcm_data[i]);
+		stereo_data.push_back(pcm_data[i + 1]);
+	}
+
+	// 写入转换后的双声道PCM数据
+	fwrite(stereo_data.data(), stereo_data.size(), 1, fp);
+
+	// 更新头部信息
+	wav_hdr.data_size = stereo_data.size();
+	wav_hdr.size_8 = stereo_data.size() + sizeof(wav_hdr) - 8;
+
+	// 更新文件头部
+	fseek(fp, 4, SEEK_SET);
+	fwrite(&wav_hdr.size_8, sizeof(wav_hdr.size_8), 1, fp);
+	fseek(fp, 40, SEEK_SET);
+	fwrite(&wav_hdr.data_size, sizeof(wav_hdr.data_size), 1, fp);
+
+	fclose(fp);
+	qDebug() << "单声道转双声道WAV文件写入完成";
 }
 
 void HVWebSocket::write_pcm_to_wav_file_mp3(std::string wav_path, std::string& pcm_data)

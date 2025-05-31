@@ -156,7 +156,7 @@ private:
 	}
 
 	void write_pcm_to_wav_file(std::string wav_path, std::string& pcm_data);
-	
+	void write_pcm_to_wav_file_ex(std::string wav_path, std::string& pcm_data);
 	void write_pcm_to_wav_file_mp3(std::string wav_path, std::string& pcm_data);
 
 
