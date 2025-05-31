@@ -298,7 +298,7 @@ void AutoMainWnd::on_btn_save_clicked()
             th.do_tts(build_text, build_file_names, tts_config);
 
 			//TTSHelper::instance()->do_tts(build_text, build_file_names, tts_voice_params_);
-            break;
+            //break;
         }
         RECHelper::Instance()->ModifyRecFileAll(m_vCtxIndexList);
         emit signal_finish();
