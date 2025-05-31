@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-
+#include "stdafx.h"
 /* wav音频头部格式 */
 typedef struct _wave_pcm_hdr
 {
@@ -36,11 +36,11 @@ public:
 
 	int init();
 
-	int do_tts(std::string strText, std::vector<std::string> strBuildFilePath, std::vector<std::string> voice_params);
+	int do_tts(std::string strText, std::vector<std::string> strBuildFilePath, TTSConfig tts_config);
 
 private:
 	int do_tts_once(std::string strText, std::string strBuildFilePath, std::string voice_params);
-	int do_tts_once_http(std::string strText, std::string strBuildFilePath, std::string voice_params);
+	int do_tts_once_http(std::string strText, std::string strBuildFilePath, std::string voice_params, int speed, int volume);
 private:
 	void uninit();
 };

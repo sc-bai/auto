@@ -11,6 +11,7 @@
 #include "include/msp_errors.h"
 #include "Net/HvNetManager.h"
 #include "Net/HvWebsocketManager.h"
+#include "stdafx.h"
  
 /* 默认wav音频头部数据 */
 wave_pcm_hdr default_wav_hdr =
@@ -69,15 +70,15 @@ int TTSHelper::init()
 	*/
 }
 
-int TTSHelper::do_tts(std::string strText, std::vector<std::string> strBuildFilePath, std::vector<std::string> voice_params)
+int TTSHelper::do_tts(std::string strText, std::vector<std::string> strBuildFilePath, TTSConfig tts_config)
 {
-	if (strBuildFilePath.size() != voice_params.size() || strBuildFilePath.empty()|| voice_params.empty()) {
+	if (strBuildFilePath.size() != tts_config.voices.size() || strBuildFilePath.empty()|| tts_config.voices.empty()) {
 		return -1;
 	}
 	int ret = -1;
 	for (int i=0;i<strBuildFilePath.size();i++)
 	{
-		ret = do_tts_once_http(strText, strBuildFilePath[i], voice_params[i]);
+		ret = do_tts_once_http(strText, strBuildFilePath[i], tts_config.voices[i].toStdString(), tts_config.speed, tts_config.volume);
 		if (ret == -1) {
 			printf("合成失败");
 		}
@@ -179,7 +180,7 @@ int TTSHelper::do_tts_once(std::string strText, std::string strBuildFilePath, st
 
 #include <QDebug>
 // http
-int TTSHelper::do_tts_once_http(std::string strText, std::string strBuildFilePath, std::string voice_params)
+int TTSHelper::do_tts_once_http(std::string strText, std::string strBuildFilePath, std::string voice_params, int speed, int volume)
 {
 	/*std::string url = HvNetManager::instance()->assemble_auth_url("wss://tts-api.xfyun.cn/v2/tts", "53964d67bd0a5dfa0ccd9a0c69f540a2", "NTA3YTUwZThkMzk4YTk4YzQwMTY2ZGNk");
 
@@ -190,7 +191,7 @@ int TTSHelper::do_tts_once_http(std::string strText, std::string strBuildFilePat
 	*/
 	qDebug() << "text:" << strText.c_str();
 	HVWebSocket hs;
-	hs.sendMsg(strText, strBuildFilePath, voice_params);
+	hs.sendMsg(strText, strBuildFilePath, voice_params, speed, volume);
 	hs.wait_condition();
 	/*
 	HVWebSocket::instance()->sendMsg(strText, strBuildFilePath, voice_params);

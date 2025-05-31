@@ -105,7 +105,7 @@ private:
     QStringList ini_list_;
     uint64_t ini_index_ = 0;
 
-    std::vector<std::string> tts_voice_params_; // 一次性合成多个音色语音
+    TTSConfig tts_config; // 一次性合成多个音色语音 音量 音速
 
     std::thread m_work_thread;
     std::atomic<bool> m_thread_running_ = false;

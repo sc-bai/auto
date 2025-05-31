@@ -1,5 +1,6 @@
 #pragma once
 
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +9,7 @@
 #include <time.h>
 #include <fstream>
 #include <tchar.h>
+#include <QVector>
 
 struct ContentListItem;
 struct WHListItem;
@@ -132,3 +134,8 @@ struct DateModifyItem
 	}
 };
 
+struct TTSConfig {
+	int speed{50};
+	int volume{50};
+	QVector<QString> voices;
+};

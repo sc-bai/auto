@@ -68,7 +68,7 @@ HVWebSocket::~HVWebSocket()
 
 }
 
-void HVWebSocket::sendMsg(const std::string Msg, std::string strBuildFilePath, std::string voice_params)
+void HVWebSocket::sendMsg(const std::string Msg, std::string strBuildFilePath, std::string voice_params, int speed, int volume)
 {
 	std::string utf8_dst_text = Msg;
 	std::string to;
@@ -102,6 +102,8 @@ void HVWebSocket::sendMsg(const std::string Msg, std::string strBuildFilePath, s
 	//WebSocketReq req;
 	req_.common.app_id = "205250fa";
 	req_.business.vcn = voice_params;
+	req_.business.speed = speed;
+	req_.business.volume = volume;
 	req_.data.text = CodeTool::EncodeBase64((unsigned char*)utf8_dst_text.c_str(), utf8_dst_text.size());
 }
 

@@ -1,4 +1,5 @@
 
+#include "stdafx.h"
 #include <QMenu>
 #include <QAction>
 #include <iosfwd>
@@ -16,6 +17,7 @@
 #include "Tools/rechelper.h"
 #include "TTSHelper.h"
 #include "AutoMainWnd.h"
+#include <commdlg.h>
 
 
 AutoMainWnd::AutoMainWnd(QWidget *parent)
@@ -106,20 +108,20 @@ std::vector<std::string> AutoMainWnd::GetTTSBuildFile(ContentListItem& item)
     std::wstring build_path = tts_dir;
 
     std::wstring build_file_name;
-    int index = item.strWavName.find(L".");
+    int index = item.strRecName.find(L".");
     if (index == -1) {
         return ret;
     }
-    build_file_name = item.strWavName.substr(0, index);
+    build_file_name = item.strRecName.substr(0, index);
     
-    for (int i=0;i< tts_voice_params_.size();i++)
+    for (int i=0;i< tts_config.voices.size();i++)
     {
         build_path = tts_dir;
         build_path += build_file_name;
         build_path += L"_";
-        build_path += tool::CodeHelper::Str2WStr(tts_voice_params_[i]);
+        build_path += tts_config.voices[i].toStdWString();
         build_path += L".wav";
-        ret.push_back(tool::CodeHelper::UnicodeToUtf8(build_path));
+        ret.push_back(tool::CodeHelper::WStr2Str(build_path));
     }
 
     return ret;
@@ -234,25 +236,19 @@ std::string AutoMainWnd::BuildTTSText(ContentListItem& item)
     return tool::CodeHelper::UnicodeToUtf8(strText);
 }
 
-void readFileLineByLine(const QString& filePath, std::vector<std::string> &lines) {
-	QFile file(filePath);
-    lines.clear();
-	// 打开文件
-	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-		qWarning() << "无法打开文件：" << file.errorString();
-		return;
+void readFileLineByLine(const QString& filePath, TTSConfig &config) {
+	
+    QSettings settings(filePath, QSettings::IniFormat);
+	int size = settings.beginReadArray("voices");
+	for (int i = 0; i < size; ++i) {
+        settings.setArrayIndex(i);
+        config.voices.append(settings.value("value").toString());
 	}
+    settings.endArray();
 
-	QTextStream in(&file);
-	QString line;
+    config.speed = settings.value("speed", 50).toInt(); // 默认值50
+    config.volume = settings.value("volume", 50).toInt(); // 默认值80
 
-	// 逐行读取
-	while (in.readLineInto(&line)) { // 或 while (!(line = in.readLine()).isNull())
-		qDebug().noquote() << "读取行：" << line;
-        lines.push_back(line.toStdString());
-	}
-
-	file.close();
 }
 
 /*
@@ -262,7 +258,7 @@ void AutoMainWnd::GetCurrentVoiceType()
 {
     std::wstring config = PathHelper::Instance()->GetTTSConfig();
     QString str_config = QString::fromStdWString(config);
-    readFileLineByLine(str_config, tts_voice_params_);
+    readFileLineByLine(str_config, tts_config);
 }
 
 /*
@@ -292,17 +288,17 @@ void AutoMainWnd::on_btn_save_clicked()
             onceWavCat.push_back(m_vCtxIndexList[i]);
             emit signal_start(i);
             WavHelper::Instance()->BuildWavWithOnceCall(onceWavCat);
-            if(tts_voice_params_.empty())
+            if(tts_config.voices.empty())
                 continue;
 
             build_file_names = GetTTSBuildFile(m_vCtxTextList[i]);
             build_text = BuildTTSText(m_vCtxTextList[i]);
 
             TTSHelper th;
-            th.do_tts(build_text, build_file_names, tts_voice_params_);
+            th.do_tts(build_text, build_file_names, tts_config);
 
 			//TTSHelper::instance()->do_tts(build_text, build_file_names, tts_voice_params_);
-            //break;
+            break;
         }
         RECHelper::Instance()->ModifyRecFileAll(m_vCtxIndexList);
         emit signal_finish();

@@ -94,7 +94,7 @@ public:
 	explicit HVWebSocket();
 	~HVWebSocket();
 
-	void sendMsg(const std::string Msg, std::string strBuildFilePath, std::string voice_params);
+	void sendMsg(const std::string Msg, std::string strBuildFilePath, std::string voice_params, int speed, int volume);
 
 	//接收消息回调，用于将数据发送到界面
 	std::function<void(std::string)> m_pMsgCallBack;
