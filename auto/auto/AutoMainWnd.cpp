@@ -25,6 +25,7 @@ AutoMainWnd::AutoMainWnd(QWidget *parent)
 {
     ui.setupUi(this);
     CItemInit::Instance()->AppInit();
+    read_accented_word();
     OnUiInit();
     InitTraySys();
     AutoOpenIniFile();
@@ -232,6 +233,23 @@ std::string AutoMainWnd::BuildTTSText(ContentListItem& item)
 		strText.append(item.strPrecipitation);
     }
     strText += L"[p300]";
+
+    //strText = L"我行推出重要活动[p300]";
+
+    if (accented_word_map_.size()) {
+		QString strTTSText = QString::fromStdWString(strText);
+		QMapIterator<QString, QString> i(accented_word_map_);
+		while (i.hasNext()) {
+			i.next();
+			//cout << i.key() << ": " << i.value() << Qt::endl;
+			if (strTTSText.contains(i.key())) {
+				strTTSText.replace(i.key(), i.value());
+			}
+		}
+
+		strText = strTTSText.toStdWString();
+    }
+   
     qDebug() << "tts build text:" << strText;
     return tool::CodeHelper::UnicodeToUtf8(strText);
 }
@@ -259,6 +277,36 @@ void AutoMainWnd::GetCurrentVoiceType()
     std::wstring config = PathHelper::Instance()->GetTTSConfig();
     QString str_config = QString::fromStdWString(config);
     readFileLineByLine(str_config, tts_config);
+}
+
+/*
+    多音字配置
+*/
+void AutoMainWnd::read_accented_word()
+{
+    accented_word_map_.clear();
+    std::wstring  config = PathHelper::Instance()->get_accented_word_file();
+    QString str_config = QString::fromStdWString(config);
+
+	QFile file(str_config);
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		qDebug() << "无法打开文件:" << str_config;
+		return;
+	}
+
+	QTextStream in(&file);
+	while (!in.atEnd()) {
+		QString line = in.readLine();
+		// 分割行内容，处理多个空格情况
+		QStringList parts = line.split(' ', Qt::SkipEmptyParts);
+
+		// 处理解析结果
+        if (parts.size() != 2) {
+            continue;
+        }
+        accented_word_map_[parts[0]] = parts[1];
+	}
+    file.close();
 }
 
 /*

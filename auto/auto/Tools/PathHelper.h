@@ -46,6 +46,9 @@ public:
 	std::wstring GetDateModifyIniFile() {
 		return m_strExeDir + L"DateModify.ini";
 	}
+	std::wstring get_accented_word_file() {
+		return m_strExeDir + L"accented_word.txt";
+	}
 
 private:
 	std::wstring m_strExeDir;

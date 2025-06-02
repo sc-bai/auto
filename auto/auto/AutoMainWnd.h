@@ -57,6 +57,7 @@ private:
     std::vector<std::string> GetTTSBuildFile(ContentListItem& item);
     std::string BuildTTSText(ContentListItem& item);
     void GetCurrentVoiceType();
+    void read_accented_word();
 
     CLineComboxComplete* BuilderItem(ModifyType type);
     void ShowContentList();
@@ -109,5 +110,7 @@ private:
 
     std::thread m_work_thread;
     std::atomic<bool> m_thread_running_ = false;
+
+    QMap<QString, QString> accented_word_map_;
 };
 
