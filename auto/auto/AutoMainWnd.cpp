@@ -264,8 +264,8 @@ void readFileLineByLine(const QString& filePath, TTSConfig &config) {
 	}
     settings.endArray();
 
-    config.speed = settings.value("speed", 50).toInt(); // 默认值50
-    config.volume = settings.value("volume", 50).toInt(); // 默认值80
+    config.speed = settings.value("speed/value", 50).toInt(); // 默认值50
+    config.volume = settings.value("volume/value", 50).toInt(); // 默认值80
 
 }
 
