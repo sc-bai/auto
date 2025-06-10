@@ -6,6 +6,7 @@
 #include <vector>
 #include <QTimer>
 #include <atomic>
+#include <string>
 
 #include <thread>
 #include "CLineComboxComplete.h"
@@ -55,6 +56,7 @@ private:
 
     void SetCurrentItemBackColor(int index);
     std::vector<std::string> GetTTSBuildFile(ContentListItem& item);
+    std::vector<std::string> GetTTSBuildFile(std::wstring wavepath);
     std::string BuildTTSText(ContentListItem& item);
     void GetCurrentVoiceType();
     void read_accented_word();
@@ -112,5 +114,19 @@ private:
     std::atomic<bool> m_thread_running_ = false;
 
     QMap<QString, QString> accented_word_map_;
+
+
+private slots:
+    void on_btn_tts_select_clicked();
+    void on_btn_tts_change_clicked();
+    void on_btn_tts_do_clicked();
+    void on_btn_tts_play_clicked();
+
+private:
+    QStringList InitTTSWavFile(const QString& dirPath);
+    QString m_tts_path;
+    QStringList tts_text_list_;
+    uint64_t tts_text_index_ = 0;
+    std::vector<std::string> m_build_file_names;
 };
 

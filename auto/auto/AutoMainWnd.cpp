@@ -9,6 +9,9 @@
 #include <QTextStream>
 #include <QDebug>
 #include <QSettings>
+#include <QDir>
+#include <QDirIterator>
+#include <playsoundapi.h>
 
 #include "tools/CodeTool.h"
 
@@ -19,6 +22,7 @@
 #include "AutoMainWnd.h"
 #include <commdlg.h>
 
+#pragma comment(lib, "Winmm.lib")
 
 AutoMainWnd::AutoMainWnd(QWidget *parent)
     : QMainWindow(parent)
@@ -128,6 +132,33 @@ std::vector<std::string> AutoMainWnd::GetTTSBuildFile(ContentListItem& item)
     return ret;
 }
 
+
+std::vector<std::string> AutoMainWnd::GetTTSBuildFile(std::wstring wavpath)
+{
+	std::vector<std::string> ret;
+
+	//std::wstring tts_dir = PathHelper::Instance()->GetTTSWavDir();
+	std::wstring build_path;
+
+	std::wstring build_file_name;
+	int index = wavpath.find_last_of(L".");
+	if (index == -1) {
+		return ret;
+	}
+	build_file_name = wavpath.substr(0, index);
+
+	for (int i = 0; i < tts_config.voices.size(); i++)
+	{
+        build_path = L"";
+		build_path += build_file_name;
+		build_path += L"_";
+		build_path += tts_config.voices[i].toStdWString();
+		build_path += L".wav";
+		ret.push_back(tool::CodeHelper::WStr2Str(build_path));
+	}
+
+	return ret;
+}
 
 std::wstring ReplaceAll(std::wstring str,
 	const std::wstring& from,
@@ -1250,4 +1281,104 @@ void AutoMainWnd::ShowContentList()
 
         ui.tableWidget->setRowHeight(i, 40);
     }
+}
+
+void AutoMainWnd::on_btn_tts_select_clicked()
+{
+	TCHAR path[MAX_PATH];
+	GetModuleFileName(NULL, path, MAX_PATH);
+
+	TCHAR szBuffer[MAX_PATH] = { 0 };
+	OPENFILENAME ofn = { 0 };
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = (HWND)this->winId();
+	ofn.lpstrFilter = _T("wavÎÄ¼þ(*.wav)\0 * .wav\0");
+	ofn.lpstrInitialDir = _T("D:\\Program Files");
+	ofn.lpstrFile = szBuffer;
+	ofn.nMaxFile = sizeof(szBuffer) / sizeof(*szBuffer);
+	ofn.nFilterIndex = 0;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER;
+	BOOL bSel = GetOpenFileName(&ofn);
+	if (bSel) {
+        m_tts_path = QString::fromStdWString(szBuffer);
+	}
+	else {
+        m_tts_path = "";
+	}
+	ui.edt_tts_file_path->setText(m_tts_path);
+
+    tts_text_list_ = InitTTSWavFile(m_tts_path);
+}
+
+QString readTextFile(const QString& filePath) {
+	QFile file(filePath);
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		qWarning() << "Cannot open file:" << file.errorString();
+		return QString();
+	}
+
+	QTextStream in(&file);
+	QString content = in.readAll();
+	file.close();
+
+	return content;
+}
+
+void AutoMainWnd::on_btn_tts_change_clicked()
+{
+    if (tts_text_list_.size()) {
+        tts_text_index_++;
+        int index = tts_text_index_ % tts_text_list_.size();
+        if (tts_text_list_[index].contains(".txt")) {
+            QString tts_text = readTextFile(tts_text_list_[index]);
+            ui.plainTextEdit->clear();
+            ui.plainTextEdit->appendPlainText(tts_text);
+            m_tts_path = tts_text_list_[index].replace(".txt", ".wav");
+			ui.edt_tts_file_path->setText(m_tts_path);
+        }
+    }
+}
+
+QStringList AutoMainWnd::InitTTSWavFile(const QString& filePath)
+{
+	QStringList txtFiles;
+	QFileInfo fileInfo(filePath);
+    QString dirPath = fileInfo.absoluteDir().absolutePath();
+
+	QDirIterator it(dirPath, QStringList() << "*.txt", QDir::Files);
+	while (it.hasNext()) {
+		txtFiles.append(it.next());
+	}
+
+	return txtFiles;
+}
+
+void AutoMainWnd::on_btn_tts_do_clicked()
+{
+    std::string build_text = ui.plainTextEdit->toPlainText().toStdString();
+    if (m_tts_path.isEmpty() || build_text.empty())
+        return;
+
+    ui.btn_tts_do->setEnabled(false);
+	std::vector<std::string> build_file_names;
+
+	build_file_names = GetTTSBuildFile(m_tts_path.toStdWString());
+    m_build_file_names = build_file_names;
+	TTSHelper th;
+	th.do_tts(build_text, build_file_names, tts_config);
+    ui.btn_tts_do->setEnabled(true);
+}
+
+void AutoMainWnd::on_btn_tts_play_clicked()
+{
+	if (m_tts_path.isEmpty())
+		return;
+    std::wstring strVideoPath;
+    for (auto& item : m_build_file_names)
+    {
+        strVideoPath = CodeTool::Str2WStr(item);
+        ::PlaySound(strVideoPath.c_str(), NULL, SND_FILENAME | SND_SYNC);
+    }
+   
+    return;
 }

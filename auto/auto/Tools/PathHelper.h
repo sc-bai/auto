@@ -29,6 +29,9 @@ public:
 	std::wstring GetWavDir() {
 		return m_strExeDir + L"wav\\";
 	}
+	std::wstring GetTTSWavDir() {
+		return m_strExeDir + L"tts\\wav\\";
+	}
 	std::wstring GetRecDir() {
 		return m_strExeDir + L"rec\\";
 	}
