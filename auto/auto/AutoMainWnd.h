@@ -77,7 +77,7 @@ private: // ¶ÁÔ¤±¨ÎÄ¼þ
 	bool HandleReportFile(std::wstring strLineText);
 	void ModifyCtxItem(ContentListItem& item); // text
 
-
+    void WriteTTSTextFile(std::string strText, std::string strFilePath);
 private slots:
     void slot_text_select(QString strText, ModifyType type);
 private:

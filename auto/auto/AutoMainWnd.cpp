@@ -391,6 +391,7 @@ void AutoMainWnd::on_btn_save_clicked()
 
             TTSHelper th;
             th.do_tts(build_text, build_file_names, tts_config);
+            
 
 			//TTSHelper::instance()->do_tts(build_text, build_file_names, tts_voice_params_);
             //break;
@@ -646,6 +647,21 @@ void AutoMainWnd::ModifyCtxItem(ContentListItem& item)
 	}
 	ChangeTextVecToIndexVec();
 	ShowContentList();
+}
+
+void AutoMainWnd::WriteTTSTextFile(std::string strText, std::string strFilePath)
+{
+    std::wstring strwText = tool::CodeHelper::Utf8ToUnicode(strText);
+    std::wstring strwFilePath = tool::CodeHelper::Utf8ToUnicode(strFilePath);
+	QFile file(QString::fromStdWString(strwFilePath));
+	if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+		QTextStream out(&file);
+		out << QString::fromStdWString(strwText);
+		file.close();
+	}
+	else {
+		qDebug() << "Failed to open file for writing:" << strFilePath.c_str();
+	}
 }
 
 /*
@@ -1382,6 +1398,14 @@ void AutoMainWnd::on_btn_tts_do_clicked()
     m_build_file_names = build_file_names;
 	TTSHelper th;
 	th.do_tts(build_text, build_file_names, tts_config);
+
+	for (auto& path_item : build_file_names)
+	{
+		QString strPath = QString::fromStdString(path_item);
+		strPath = strPath.replace(".wav", ".txt");
+		WriteTTSTextFile(build_text, strPath.toStdString());
+	}
+
     ui.btn_tts_do->setEnabled(true);
 }
 
