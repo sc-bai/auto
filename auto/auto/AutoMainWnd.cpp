@@ -239,13 +239,29 @@ std::string AutoMainWnd::BuildTTSText(ContentListItem& item)
     }
     else {
         if (item.strWindLv != L"空" && item.strWindLvEx != L"空") {
+
+            strText.append(L",");
+            if (item.strWindLv.size() == 2)
+            {
+                std::wstring strWind1 = cover(item.strWindLv);
+                QString QstrWind1 = QString::fromStdWString(strWind1);
+                strText.append(QstrWind1.left(1).toStdWString()); // 去掉 级
+				strText.append(L"到");
+				strText.append(cover(item.strWindLvEx));
+            }
+            else if (item.strWindLv.size() == 3 && item.strWindLvEx.size() == 3) {
+				strText.append(cover(item.strWindLv));
+				strText.append(L"转");
+				strText.append(cover(item.strWindLvEx));
+            }
+
+            /*
 			strText.append(L",");
-			//strText.append(item.strWindLv);
             strText.append(cover(item.strWindLv));
 
 			strText.append(L"到");
-			//strText.append(item.strWindLvEx);
             strText.append(cover(item.strWindLvEx));
+            */
         }
         else if (item.strWindLv == L"空" && item.strWindLvEx != L"空") {
             strText.append(L",");
@@ -1297,7 +1313,7 @@ void AutoMainWnd::on_btn_tts_select_clicked()
 	ofn.lpstrFile = szBuffer;
 	ofn.nMaxFile = sizeof(szBuffer) / sizeof(*szBuffer);
 	ofn.nFilterIndex = 0;
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER;
+	ofn.Flags = OFN_PATHMUSTEXIST | /*OFN_FILEMUSTEXIST | */OFN_EXPLORER;
 	BOOL bSel = GetOpenFileName(&ofn);
 	if (bSel) {
         m_tts_path = QString::fromStdWString(szBuffer);
