@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QSettings>
 #include <QDir>
+#include <QMessageBox>
 #include <QDirIterator>
 #include <playsoundapi.h>
 
@@ -245,7 +246,16 @@ std::string AutoMainWnd::BuildTTSText(ContentListItem& item)
             {
                 std::wstring strWind1 = cover(item.strWindLv);
                 QString QstrWind1 = QString::fromStdWString(strWind1);
-                strText.append(QstrWind1.left(1).toStdWString()); // 去掉 级
+
+                // 一的发音不太对
+                if (QstrWind1.left(1).toStdWString() == L"一") {
+                    strText.append(QstrWind1.left(1).toStdWString()); // 去掉 级
+                    strText.append(L"[=yi1]");
+                }
+                else {
+                    strText.append(QstrWind1.left(1).toStdWString()); // 去掉 级
+                }
+                
 				strText.append(L"到");
 				strText.append(cover(item.strWindLvEx));
             }
@@ -279,9 +289,8 @@ std::string AutoMainWnd::BuildTTSText(ContentListItem& item)
 		strText.append(L",降水概率");
 		strText.append(item.strPrecipitation);
     }
-    strText += L"[p300]";
+    strText += L"[p2000]";
 
-    //strText = L"我行推出重要活动[p300]";
 
     if (accented_word_map_.size()) {
 		QString strTTSText = QString::fromStdWString(strText);
@@ -392,7 +401,6 @@ void AutoMainWnd::on_btn_save_clicked()
             TTSHelper th;
             th.do_tts(build_text, build_file_names, tts_config);
             
-
 			//TTSHelper::instance()->do_tts(build_text, build_file_names, tts_voice_params_);
             //break;
         }
@@ -1314,6 +1322,19 @@ void AutoMainWnd::ShowContentList()
         ui.tableWidget->setRowHeight(i, 40);
     }
 }
+QString readTextFile(const QString& filePath) {
+	QFile file(filePath);
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		qWarning() << "Cannot open file:" << file.errorString();
+		return QString();
+	}
+
+	QTextStream in(&file);
+	QString content = in.readAll();
+	file.close();
+
+	return content;
+}
 
 void AutoMainWnd::on_btn_tts_select_clicked()
 {
@@ -1337,24 +1358,45 @@ void AutoMainWnd::on_btn_tts_select_clicked()
 	else {
         m_tts_path = "";
 	}
+
+    if (m_tts_path.isEmpty() == false) {
+        if (m_tts_path.endsWith(".wav") || m_tts_path.endsWith(".WAV")) {
+
+        }
+        else {
+            m_tts_path.append(".wav");
+        }
+    }
 	ui.edt_tts_file_path->setText(m_tts_path);
-
+    if (m_tts_path.isEmpty()) {
+        ui.plainTextEdit->clear();
+        return;
+    }
     tts_text_list_ = InitTTSWavFile(m_tts_path);
+
+    QString strTxtFile = m_tts_path.replace(".wav", ".txt");
+	QFileInfo fileInfo(strTxtFile);
+    QString strbasePath = fileInfo.path();
+	QString baseName =  fileInfo.completeBaseName();  // 获取不带后缀的文件名
+    baseName = baseName.left(baseName.indexOf("_"));
+
+    strTxtFile = strbasePath + "/" + baseName + ".txt";
+    if(QFile::exists(strTxtFile) == false) {
+        return;
+    }
+
+    for (auto& item : tts_text_list_)
+    {
+        if (item.contains(baseName)) {
+			QString tts_text = readTextFile(strTxtFile);
+			ui.plainTextEdit->clear();
+			ui.plainTextEdit->appendPlainText(tts_text);
+        }
+    }
+
 }
 
-QString readTextFile(const QString& filePath) {
-	QFile file(filePath);
-	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-		qWarning() << "Cannot open file:" << file.errorString();
-		return QString();
-	}
 
-	QTextStream in(&file);
-	QString content = in.readAll();
-	file.close();
-
-	return content;
-}
 
 void AutoMainWnd::on_btn_tts_change_clicked()
 {
@@ -1390,6 +1432,27 @@ void AutoMainWnd::on_btn_tts_do_clicked()
     std::string build_text = ui.plainTextEdit->toPlainText().toStdString();
     if (m_tts_path.isEmpty() || build_text.empty())
         return;
+    build_text.append("p[2000]");
+
+    // 1个逗号暂停300 句号600
+    QString strBuildText = QString::fromStdString(build_text);
+    QString strBuildTextReplace;
+    for (int i=0;i<strBuildText.size();i++)
+    {
+        if (strBuildText[i] == ',' || strBuildText[i] == '，') {
+            strBuildTextReplace.append("[p300]");
+            continue;
+        }
+        else if (strBuildText[i] == '.' || strBuildText[i] == '。' || strBuildText[i] == '!' || strBuildText[i] == '！') {
+            strBuildTextReplace.append("[p600]");
+            continue;
+        }
+        else {
+            strBuildTextReplace.append(strBuildText[i]);
+        }
+    }
+
+    build_text = strBuildTextReplace.toStdString();
 
     ui.btn_tts_do->setEnabled(false);
 	std::vector<std::string> build_file_names;
@@ -1399,14 +1462,11 @@ void AutoMainWnd::on_btn_tts_do_clicked()
 	TTSHelper th;
 	th.do_tts(build_text, build_file_names, tts_config);
 
-	for (auto& path_item : build_file_names)
-	{
-		QString strPath = QString::fromStdString(path_item);
-		strPath = strPath.replace(".wav", ".txt");
-		WriteTTSTextFile(build_text, strPath.toStdString());
-	}
+    QString tts_path_txt = m_tts_path.replace(".wav", ".txt");
+	WriteTTSTextFile(build_text, tts_path_txt.toStdString());
 
     ui.btn_tts_do->setEnabled(true);
+    QMessageBox::information(nullptr, "提示", "合成完成");
 }
 
 void AutoMainWnd::on_btn_tts_play_clicked()

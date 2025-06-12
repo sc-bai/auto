@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -375,7 +375,7 @@
         <item>
          <widget class="QLabel" name="label_3">
           <property name="text">
-           <string>注意：如果需要再文本中增加暂停则插入[p300] ，表示暂停300毫秒，多音字则在多音字后面加上该后缀：如 我行[=hang2]推出重要活动[p300]</string>
+           <string>注意：多音字后边加上读音后缀 如 银行[hang2]  旅行[xing2]</string>
           </property>
          </widget>
         </item>
