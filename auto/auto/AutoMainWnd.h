@@ -123,9 +123,11 @@ private slots:
     void on_btn_tts_play_clicked();
 
 private:
-    QStringList InitTTSWavFile(const QString& dirPath);
-    QString m_tts_path;
-    QStringList tts_text_list_;
+    QStringList InitTTSWavFile();
+     
+    QString m_current_tts_wav_path;
+    QStringList tts_txt_list_;
+    QStringList tts_wav_list_;
     uint64_t tts_text_index_ = 0;
     std::vector<std::string> m_build_file_names;
 };

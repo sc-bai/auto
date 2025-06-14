@@ -46,6 +46,9 @@ AutoMainWnd::AutoMainWnd(QWidget *parent)
 		SetCurrentItemBackColor(-1);
         MessageBox(0, L"    结束! <<北京中天华视气象科技有限公司>>\n\n                        010-62146148", L"ok", MB_OK | MB_ICONINFORMATION);
 		}, Qt::QueuedConnection);
+
+    tts_wav_list_ = InitTTSWavFile();
+    on_btn_tts_change_clicked();
 }
 
 AutoMainWnd::~AutoMainWnd()
@@ -1354,28 +1357,28 @@ void AutoMainWnd::on_btn_tts_select_clicked()
 	ofn.Flags = OFN_PATHMUSTEXIST | /*OFN_FILEMUSTEXIST | */OFN_EXPLORER;
 	BOOL bSel = GetOpenFileName(&ofn);
 	if (bSel) {
-        m_tts_path = QString::fromStdWString(szBuffer);
+        m_current_tts_wav_path = QString::fromStdWString(szBuffer);
 	}
 	else {
-        m_tts_path = "";
+        m_current_tts_wav_path = "";
 	}
 
-    if (m_tts_path.isEmpty() == false) {
-        if (m_tts_path.endsWith(".wav") || m_tts_path.endsWith(".WAV")) {
+    if (m_current_tts_wav_path.isEmpty() == false) {
+        if (m_current_tts_wav_path.endsWith(".wav") || m_current_tts_wav_path.endsWith(".WAV")) {
 
         }
         else {
-            m_tts_path.append(".wav");
+            m_current_tts_wav_path.append(".wav");
         }
     }
-	ui.edt_tts_file_path->setText(m_tts_path);
-    if (m_tts_path.isEmpty()) {
+	ui.edt_tts_file_path->setText(m_current_tts_wav_path);
+    if (m_current_tts_wav_path.isEmpty()) {
         ui.plainTextEdit->clear();
         return;
     }
-    tts_text_list_ = InitTTSWavFile(m_tts_path);
+    
 
-    QString strTxtFile = m_tts_path.replace(".wav", ".txt");
+    QString strTxtFile = m_current_tts_wav_path.replace(".wav", ".txt");
 	QFileInfo fileInfo(strTxtFile);
     QString strbasePath = fileInfo.path();
 	QString baseName =  fileInfo.completeBaseName();  // 获取不带后缀的文件名
@@ -1386,7 +1389,7 @@ void AutoMainWnd::on_btn_tts_select_clicked()
         return;
     }
 
-    for (auto& item : tts_text_list_)
+    for (auto& item : tts_txt_list_)
     {
         if (item.contains(baseName)) {
 			QString tts_text = readTextFile(strTxtFile);
@@ -1401,37 +1404,72 @@ void AutoMainWnd::on_btn_tts_select_clicked()
 
 void AutoMainWnd::on_btn_tts_change_clicked()
 {
-    if (tts_text_list_.size()) {
+    if (tts_txt_list_.size()) {
         tts_text_index_++;
-        int index = tts_text_index_ % tts_text_list_.size();
-        if (tts_text_list_[index].contains(".txt")) {
-            QString tts_text = readTextFile(tts_text_list_[index]);
+        int index = tts_text_index_ % tts_txt_list_.size();
+
+        QString strTxtFile = tts_txt_list_[index];
+        if (strTxtFile.contains(".txt")) {
+            QString tts_text = readTextFile(strTxtFile);
             ui.plainTextEdit->clear();
             ui.plainTextEdit->appendPlainText(tts_text);
-            m_tts_path = tts_text_list_[index].replace(".txt", ".wav");
-			ui.edt_tts_file_path->setText(m_tts_path);
+            m_current_tts_wav_path = strTxtFile.replace(".txt", ".wav");
+			ui.edt_tts_file_path->setText(m_current_tts_wav_path);
         }
     }
 }
 
-QStringList AutoMainWnd::InitTTSWavFile(const QString& filePath)
+/*
+    查找auto2.0.txt 文件 返回wav列表
+*/
+QStringList AutoMainWnd::InitTTSWavFile()
 {
-	QStringList txtFiles;
-	QFileInfo fileInfo(filePath);
-    QString dirPath = fileInfo.absoluteDir().absolutePath();
+    QStringList txtFiles;
 
-	QDirIterator it(dirPath, QStringList() << "*.txt", QDir::Files);
-	while (it.hasNext()) {
-		txtFiles.append(it.next());
-	}
+    std::wstring filePath = PathHelper::Instance()->get_tts_auto_open_file();
+    QString strFilePath = QString::fromStdWString(filePath);
 
-	return txtFiles;
+    if (QFile::exists(strFilePath) == false) {
+        return QStringList();
+    }
+
+    //一行一行读文件
+    QFile file(strFilePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Cannot open file:" << file.errorString();
+        return QStringList();
+    }
+    QTextStream in(&file);
+    QString line;
+    while (!in.atEnd()) {
+        line = in.readLine();
+        txtFiles.push_back(line);
+    }
+    file.close();
+
+    tts_txt_list_.clear();
+    for (auto item : txtFiles)
+    {
+		QString strTxtFile = item.replace(".wav", ".txt");
+		QFileInfo fileInfo(strTxtFile);
+		QString strbasePath = fileInfo.path();
+		QString baseName = fileInfo.completeBaseName();  // 获取不带后缀的文件名
+		baseName = baseName.left(baseName.indexOf("_"));
+
+		strTxtFile = strbasePath + "/" + baseName + ".txt";
+		if (QFile::exists(strTxtFile) == false) {
+			continue;
+		}
+        tts_txt_list_.push_back(strTxtFile);
+    }
+
+    return txtFiles;
 }
 
 void AutoMainWnd::on_btn_tts_do_clicked()
 {
     std::string build_text = ui.plainTextEdit->toPlainText().toStdString();
-    if (m_tts_path.isEmpty() || build_text.empty())
+    if (m_current_tts_wav_path.isEmpty() || build_text.empty())
         return;
 
     build_text.append("[p2000]");
@@ -1459,13 +1497,13 @@ void AutoMainWnd::on_btn_tts_do_clicked()
     ui.btn_tts_do->setEnabled(false);
 	std::vector<std::string> build_file_names;
 
-	build_file_names = GetTTSBuildFile(m_tts_path.toStdWString());
+	build_file_names = GetTTSBuildFile(m_current_tts_wav_path.toStdWString());
     m_build_file_names = build_file_names;
 	TTSHelper th;
 	th.do_tts(build_text, build_file_names, tts_config);
 
     std::string build_text_write = ui.plainTextEdit->toPlainText().toStdString();
-    QString tts_path_txt = m_tts_path.replace(".wav", ".txt");
+    QString tts_path_txt = m_current_tts_wav_path.replace(".wav", ".txt");
 	WriteTTSTextFile(build_text_write, tts_path_txt.toStdString());
 
     ui.btn_tts_do->setEnabled(true);
@@ -1474,7 +1512,7 @@ void AutoMainWnd::on_btn_tts_do_clicked()
 
 void AutoMainWnd::on_btn_tts_play_clicked()
 {
-	if (m_tts_path.isEmpty())
+	if (m_current_tts_wav_path.isEmpty())
 		return;
     std::wstring strVideoPath;
     for (auto& item : m_build_file_names)

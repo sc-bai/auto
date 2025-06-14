@@ -52,6 +52,9 @@ public:
 	std::wstring get_accented_word_file() {
 		return m_strExeDir + L"accented_word.txt";
 	}
+	std::wstring get_tts_auto_open_file() {
+		return m_strExeDir + L"auto2.0.txt";
+	}
 
 private:
 	std::wstring m_strExeDir;
