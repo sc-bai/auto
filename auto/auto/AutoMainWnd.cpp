@@ -793,6 +793,7 @@ void AutoMainWnd::OnUiInit()
 
     connect(ui.tableWidget, &QTableWidget::itemClicked, this, &AutoMainWnd::slot_tablewidget_item_clicked);
     connect(ui.tableWidget, &QTableWidget::itemDoubleClicked, this, &AutoMainWnd::slot_tablewidget_item_dbclicked);
+    ui.tabWidget->setCurrentWidget(ui.tab);
 }
 
 /*
@@ -1432,7 +1433,8 @@ void AutoMainWnd::on_btn_tts_do_clicked()
     std::string build_text = ui.plainTextEdit->toPlainText().toStdString();
     if (m_tts_path.isEmpty() || build_text.empty())
         return;
-    build_text.append("p[2000]");
+
+    build_text.append("[p2000]");
 
     // 1个逗号暂停300 句号600
     QString strBuildText = QString::fromStdString(build_text);
@@ -1462,11 +1464,12 @@ void AutoMainWnd::on_btn_tts_do_clicked()
 	TTSHelper th;
 	th.do_tts(build_text, build_file_names, tts_config);
 
+    std::string build_text_write = ui.plainTextEdit->toPlainText().toStdString();
     QString tts_path_txt = m_tts_path.replace(".wav", ".txt");
-	WriteTTSTextFile(build_text, tts_path_txt.toStdString());
+	WriteTTSTextFile(build_text_write, tts_path_txt.toStdString());
 
     ui.btn_tts_do->setEnabled(true);
-    QMessageBox::information(nullptr, "提示", "合成完成");
+    MessageBox(0, L"    结束! <<北京中天华视气象科技有限公司>>\n\n                        010-62146148", L"ok", MB_OK | MB_ICONINFORMATION);
 }
 
 void AutoMainWnd::on_btn_tts_play_clicked()
